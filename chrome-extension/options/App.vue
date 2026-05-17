@@ -16,72 +16,89 @@
               placeholder="搜索书签..."
               class="search-input"
             />
-            <SearchSelect
-              v-model="searchCategoryId"
-              :options="categories"
-              placeholder="全部分类"
-              :searchable-threshold="5"
-              @update:modelValue="handleSearch"
-            />
+            <select v-model="searchCategoryId" @change="handleSearch" class="category-select">
+              <option :value="null">全部分类</option>
+              <option v-for="cat in categories" :key="cat.id" :value="cat.id">
+                {{ cat.name }}
+              </option>
+            </select>
           </div>
         </div>
         <div class="header-right">
-          <router-link to="/categories" class="nav-link">分类管理</router-link>
-          <router-link to="/" class="nav-link">书签列表</router-link>
+          <button @click="currentView = 'categories'" class="nav-link" :class="{ active: currentView === 'categories' }">分类管理</button>
+          <button @click="currentView = 'list'" class="nav-link" :class="{ active: currentView === 'list' }">书签列表</button>
         </div>
       </div>
     </header>
     <main class="main">
-      <router-view v-slot="{ Component, route }">
-        <transition :name="route.meta.transition || 'fade-slide'" mode="out-in">
-          <keep-alive :include="['BookmarkList', 'BookmarkForm']">
-            <component :is="Component" :search-keyword="searchKeyword" :search-category-id="searchCategoryId" />
-          </keep-alive>
-        </transition>
-      </router-view>
+      <BookmarkList
+        v-if="currentView === 'list'"
+        @edit="handleEdit"
+        @add="currentView = 'add'"
+      />
+      <CategoryManager
+        v-else-if="currentView === 'categories'"
+      />
+      <BookmarkForm
+        v-else-if="currentView === 'add' || currentView === 'edit'"
+        :edit-id="editId"
+        @saved="handleSaved"
+        @cancel="currentView = 'list'"
+      />
     </main>
   </div>
 </template>
 
 <script>
-import { ref, provide, onMounted, computed } from 'vue'
-import { categoryApi } from './services/api'
-import { sharedState } from './store/sharedState'
-import SearchSelect from './components/SearchSelect.vue'
+import { ref, onMounted, provide } from 'vue'
+import { useBookmarkStore } from '../shared/store/bookmarkStore.js'
+import BookmarkList from './views/BookmarkList.vue'
+import CategoryManager from './views/CategoryManager.vue'
+import BookmarkForm from './views/BookmarkForm.vue'
 
 export default {
   name: 'App',
   components: {
-    SearchSelect
+    BookmarkList,
+    CategoryManager,
+    BookmarkForm
   },
   setup() {
+    const { categories, categoryApi, loadFromStorage } = useBookmarkStore()
     const searchKeyword = ref('')
     const searchCategoryId = ref(null)
-
-    const handleSearch = () => {
-    }
-
-    const fetchCategories = async () => {
-      try {
-        const response = await categoryApi.getAll()
-        sharedState.categories = response.data
-      } catch (err) {
-        console.error('获取分类失败', err)
-      }
-    }
-
-    onMounted(() => {
-      fetchCategories()
-    })
+    const currentView = ref('list')
+    const editId = ref(null)
 
     provide('searchKeyword', searchKeyword)
     provide('searchCategoryId', searchCategoryId)
 
+    const handleSearch = () => {
+    }
+
+    const handleEdit = (id) => {
+      editId.value = id
+      currentView.value = 'edit'
+    }
+
+    const handleSaved = () => {
+      currentView.value = 'list'
+      editId.value = null
+    }
+
+    onMounted(() => {
+      loadFromStorage()
+    })
+
     return {
       searchKeyword,
       searchCategoryId,
-      categories: computed(() => sharedState.categories),
-      handleSearch
+      currentView,
+      editId,
+      categories,
+      handleSearch,
+      handleEdit,
+      handleSaved
     }
   }
 }
@@ -190,6 +207,21 @@ body {
   color: #999;
 }
 
+.category-select {
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  color: #666;
+  outline: none;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+.category-select:hover {
+  background: rgba(102, 126, 234, 0.1);
+}
+
 .header-right {
   display: flex;
   gap: 1rem;
@@ -204,6 +236,9 @@ body {
   padding: 0.5rem 0.75rem;
   border-radius: 8px;
   transition: all 0.2s ease;
+  background: transparent;
+  border: none;
+  cursor: pointer;
 }
 
 .nav-link:hover {
@@ -211,7 +246,7 @@ body {
   background: rgba(102, 126, 234, 0.1);
 }
 
-.nav-link.router-link-active {
+.nav-link.active {
   color: #667eea;
   background: rgba(102, 126, 234, 0.1);
 }
@@ -222,27 +257,6 @@ body {
   max-width: 1200px;
   margin: 0 auto;
   width: 100%;
-}
-
-.fade-slide-enter-active,
-.fade-slide-leave-active {
-  transition: all 0.3s ease;
-}
-
-.fade-slide-enter-from {
-  opacity: 0;
-  transform: translateX(20px);
-}
-
-.fade-slide-leave-to {
-  opacity: 0;
-  transform: translateX(-20px);
-}
-
-.fade-slide-enter-to,
-.fade-slide-leave-from {
-  opacity: 1;
-  transform: translateX(0);
 }
 
 @media (max-width: 768px) {

@@ -21,31 +21,13 @@
         >
           批量删除 ({{ selectedBookmarks.length }})
         </button>
-        <router-link to="/add" class="btn-add">+ 添加书签</router-link>
+        <button @click="$emit('add')" class="btn-add">+ 添加书签</button>
       </div>
     </div>
 
-    <div v-if="importing || uploadProgress > 0 || importProgress > 0" class="import-progress">
+    <div v-if="importing" class="import-progress">
       <div class="progress-header">
         <span class="progress-status">{{ importStatusText }}</span>
-        <span class="progress-percent">{{ currentProgressPercent }}%</span>
-      </div>
-      <div class="progress-stages">
-        <div class="stage" :class="{ active: importStatus === 'uploading', completed: ['parsing', 'importing', 'completed'].includes(importStatus) }">
-          <div class="stage-bar">
-            <div class="stage-fill" :style="{ width: uploadProgress + '%' }"></div>
-          </div>
-          <span class="stage-label">上传</span>
-        </div>
-        <div class="stage" :class="{ active: ['parsing', 'importing'].includes(importStatus), completed: importStatus === 'completed' }">
-          <div class="stage-bar">
-            <div class="stage-fill" :style="{ width: importProgress + '%' }"></div>
-          </div>
-          <span class="stage-label">导入</span>
-        </div>
-      </div>
-      <div class="progress-details" v-if="importedCount > 0">
-        已导入 {{ importedCount }} 个书签
       </div>
     </div>
 
@@ -59,7 +41,7 @@
       <button @click="clearSearch" class="clear-search">清除搜索</button>
     </div>
 
-    <div v-if="initialLoading" class="loading">加载中...</div>
+    <div v-if="loading" class="loading">加载中...</div>
     <div v-else-if="error" class="error">{{ error }}</div>
     <div v-else-if="filteredBookmarks.length === 0 && !hasSearch" class="empty">暂无书签，请点击上方"添加书签"按钮创建</div>
     <div v-else-if="filteredBookmarks.length === 0 && hasSearch" class="empty">没有找到匹配的书签</div>
@@ -115,10 +97,10 @@
             </div>
           </div>
           <div class="card-actions">
-            <router-link :to="`/edit/${bookmark.id}`" class="btn-action btn-edit">
+            <button @click="$emit('edit', bookmark.id)" class="btn-action btn-edit">
               <span class="action-icon">✏️</span>
               编辑
-            </router-link>
+            </button>
             <button @click="deleteBookmark(bookmark.id)" class="btn-action btn-delete">
               <span class="action-icon">🗑️</span>
               删除
@@ -171,25 +153,26 @@
 </template>
 
 <script>
-import { ref, computed, inject, onMounted, onActivated } from 'vue'
-import { bookmarkApi, categoryApi } from '../services/api'
-import { sharedState } from '../store/sharedState'
+import { ref, computed, onMounted, watch, inject } from 'vue'
+import { useBookmarkStore } from '../../shared/store/bookmarkStore.js'
 
 export default {
   name: 'BookmarkList',
+  emits: ['edit', 'add'],
   setup() {
-    const initialLoading = ref(sharedState.bookmarks.length === 0)
+    const { bookmarks, categories, bookmarkApi, categoryApi, loadFromStorage } = useBookmarkStore()
+
+    const loading = ref(false)
     const error = ref(null)
     const selectedBookmarks = ref([])
     const importing = ref(false)
-    const uploadProgress = ref(0)
-    const importProgress = ref(0)
-    const importStatus = ref('uploading')
-    const importStatusText = ref('等待上传...')
-    const importedCount = ref(0)
+    const importStatusText = ref('')
     const currentPage = ref(1)
     const pageSize = ref(10)
     const needsAnimation = ref(true)
+
+    const searchKeyword = inject('searchKeyword', ref(''))
+    const searchCategoryId = inject('searchCategoryId', ref(null))
 
     const toast = ref({
       show: false,
@@ -225,22 +208,6 @@ export default {
       }, 3000)
     }
 
-    const currentProgressPercent = computed(() => {
-      if (importStatus.value === 'uploading') {
-        return Math.round(uploadProgress.value * 0.3)
-      } else if (importStatus.value === 'parsing') {
-        return Math.round(30 + importProgress.value * 0.2)
-      } else if (importStatus.value === 'importing') {
-        return Math.round(50 + importProgress.value * 0.5)
-      } else if (importStatus.value === 'completed') {
-        return 100
-      }
-      return 0
-    })
-
-    const searchKeyword = inject('searchKeyword')
-    const searchCategoryId = inject('searchCategoryId')
-
     const allSelected = computed(() => {
       return paginatedBookmarks.value.length > 0 &&
              selectedBookmarks.value.length === paginatedBookmarks.value.length
@@ -260,10 +227,10 @@ export default {
     })
 
     const filteredBookmarks = computed(() => {
-      let result = [...sharedState.bookmarks]
+      let result = [...bookmarks.value]
 
       if (searchCategoryId.value !== null) {
-        result = result.filter(b => b.categoryId === searchCategoryId.value)
+        result = result.filter(b => b.categoryId == searchCategoryId.value)
       }
 
       if (searchKeyword.value && searchKeyword.value.trim() !== '') {
@@ -316,38 +283,27 @@ export default {
     })
 
     const fetchBookmarks = async () => {
+      loading.value = true
       error.value = null
       try {
-        const response = await bookmarkApi.getAll()
-        sharedState.bookmarks = response.data
-        initialLoading.value = false
-        if (currentPage.value > totalPages.value) {
-          currentPage.value = Math.max(1, totalPages.value)
-        }
+        await loadFromStorage()
       } catch (err) {
         error.value = '获取书签失败'
         console.error(err)
-      }
-    }
-
-    const fetchCategories = async () => {
-      try {
-        const response = await categoryApi.getAll()
-        sharedState.categories = response.data
-      } catch (err) {
-        console.error('获取分类失败', err)
+      } finally {
+        loading.value = false
       }
     }
 
     const getCategoryById = (id) => {
       if (!id) return null
-      return sharedState.categories.find(c => c.id === id)
+      return categories.value.find(c => c.id === id)
     }
 
     const handleClick = async (id) => {
       try {
         await bookmarkApi.recordClick(id)
-        const bookmark = sharedState.bookmarks.find(b => b.id === id)
+        const bookmark = bookmarks.value.find(b => b.id === id)
         if (bookmark) {
           bookmark.lastClickedAt = new Date().toISOString()
         }
@@ -361,10 +317,9 @@ export default {
         try {
           await bookmarkApi.delete(id)
           showToast('删除成功')
-          // 直接从sharedState中删除对应的书签，避免重新加载数据导致页面闪烁
-          const index = sharedState.bookmarks.findIndex(b => b.id === id)
+          const index = bookmarks.value.findIndex(b => b.id === id)
           if (index !== -1) {
-            sharedState.bookmarks.splice(index, 1)
+            bookmarks.value.splice(index, 1)
           }
         } catch (err) {
           showToast('删除书签失败', 'error')
@@ -379,7 +334,7 @@ export default {
           await bookmarkApi.deleteBatch(selectedBookmarks.value)
           selectedBookmarks.value = []
           showToast('批量删除成功')
-          fetchBookmarks()
+          await fetchBookmarks()
         } catch (err) {
           showToast('批量删除失败', 'error')
           console.error(err)
@@ -393,121 +348,220 @@ export default {
       currentPage.value = 1
     }
 
+    const parseBookmarkFile = (htmlContent) => {
+      const parser = new DOMParser()
+      const doc = parser.parseFromString(htmlContent, 'text/html')
+      const bookmarks = []
+      const categoryMap = new Map()
+
+      const parseNode = (node, currentCategory = null) => {
+        // 处理分类标题 (H3)
+        if (node.nodeName === 'H3' && node.hasAttribute('ADD_DATE')) {
+          const categoryName = node.textContent.trim()
+          // 跳过根目录"书签栏"
+          if (categoryName && categoryName !== '书签栏' && categoryName !== 'Bookmarks' && categoryName !== '书签' && categoryName !== 'Bookmarks Bar') {
+            currentCategory = categoryName
+            categoryMap.set(categoryName, true)
+          }
+          // 获取相邻的 DL 元素（分类内容）
+          const sibling = node.nextElementSibling
+          if (sibling && sibling.nodeName === 'DL') {
+            for (const child of sibling.childNodes || []) {
+              parseNode(child, currentCategory)
+            }
+          }
+          return // 处理完 H3 后不再遍历其 childNodes，避免重复
+        }
+
+        // 处理书签链接 (A)
+        if (node.nodeName === 'A' && node.href) {
+          const title = node.textContent.trim()
+          if (title && node.href.startsWith('http')) {
+            bookmarks.push({
+              title,
+              url: node.href,
+              description: '',
+              categoryName: currentCategory
+            })
+          }
+        }
+
+        // 处理 DT 元素，递归其子节点
+        if (node.nodeName === 'DT') {
+          for (const child of node.childNodes || []) {
+            parseNode(child, currentCategory)
+          }
+        }
+      }
+
+      // 从根 DL 开始解析
+      const dl = doc.querySelector('dl')
+      if (dl) {
+        for (const child of dl.childNodes || []) {
+          parseNode(child, null)
+        }
+      }
+
+      // 去重：基于 URL 去重
+      const uniqueBookmarks = []
+      const seenUrls = new Set()
+      for (const bm of bookmarks) {
+        if (!seenUrls.has(bm.url)) {
+          seenUrls.add(bm.url)
+          uniqueBookmarks.push(bm)
+        }
+      }
+
+      return { bookmarks: uniqueBookmarks, categories: Array.from(categoryMap.keys()) }
+    }
+
     const handleImport = async (event) => {
       const file = event.target.files[0]
       if (!file) return
 
       importing.value = true
-      uploadProgress.value = 0
-      importProgress.value = 0
-      importStatus.value = 'uploading'
-      importStatusText.value = '正在上传文件...'
-      importedCount.value = 0
+      importStatusText.value = '正在解析文件...'
 
       try {
-        const response = await bookmarkApi.importBookmarks(file, (progressEvent) => {
-          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
-          uploadProgress.value = percentCompleted
-          importStatusText.value = '正在上传: ' + percentCompleted + '%'
+        const content = await file.text()
+        const { bookmarks: importedBookmarks, categories: categoryNames } = parseBookmarkFile(content)
+
+        if (importedBookmarks.length === 0) {
+          showToast('未找到有效的书签', 'error')
+          importing.value = false
+          return
+        }
+
+        importStatusText.value = `正在导入分类...`
+        for (const name of categoryNames) {
+          try {
+            await categoryApi.create({ name, color: '#667eea' })
+          } catch (err) {
+            console.warn('分类创建失败（可能已存在）:', name)
+          }
+        }
+
+        await loadFromStorage()
+        const nameToIdMap = {}
+        categories.value.forEach(c => {
+          nameToIdMap[c.name] = c.id
         })
 
-        const data = response.data
-        if (data.taskId) {
-          importStatus.value = 'parsing'
-          importStatusText.value = '文件上传完成，等待解析...'
-          uploadProgress.value = 100
-          pollImportProgress(data.taskId)
-        } else {
-          importStatus.value = 'completed'
-          importStatusText.value = '导入完成'
-          setTimeout(() => {
-            importing.value = false
-            uploadProgress.value = 0
-            importProgress.value = 0
-            showToast(data.message || '导入成功', 'success')
-            fetchBookmarks()
-            fetchCategories()
-          }, 500)
-        }
+        importStatusText.value = `正在导入 ${importedBookmarks.length} 个书签...`
+        const bookmarksWithCategoryId = importedBookmarks.map(b => ({
+          title: b.title,
+          url: b.url,
+          description: b.description,
+          categoryId: b.categoryName ? nameToIdMap[b.categoryName] || null : null
+        }))
+
+        await bookmarkApi.importBookmarks(bookmarksWithCategoryId)
+
+        showToast(`成功导入 ${importedBookmarks.length} 个书签`)
+        await fetchBookmarks()
       } catch (err) {
-        console.error('Import error:', err)
+        showToast('导入失败: ' + err.message, 'error')
+        console.error(err)
+      } finally {
         importing.value = false
-        uploadProgress.value = 0
-        importProgress.value = 0
-        importStatus.value = 'failed'
-        importStatusText.value = '导入失败'
-        showToast('导入失败: ' + (err.message || ''), 'error')
+        importStatusText.value = ''
       }
+
       event.target.value = ''
-    }
-
-    const pollImportProgress = async (taskId) => {
-      const poll = async () => {
-        try {
-          const response = await bookmarkApi.getImportProgress(taskId)
-          const progress = response.data
-
-          importStatus.value = progress.status || 'importing'
-          importProgress.value = progress.percent || 0
-          importStatusText.value = progress.message || getStatusText(progress.status)
-          importedCount.value = progress.current || 0
-
-          if (progress.status === 'completed') {
-            importProgress.value = 100
-            importStatus.value = 'completed'
-            importStatusText.value = progress.message || '导入完成'
-            setTimeout(() => {
-              importing.value = false
-              uploadProgress.value = 0
-              importProgress.value = 0
-              showToast(progress.message || '导入成功', 'success')
-              fetchBookmarks()
-              fetchCategories()
-            }, 500)
-          } else if (progress.status === 'failed') {
-            importing.value = false
-            importStatus.value = 'failed'
-            importStatusText.value = '导入失败: ' + (progress.message || '')
-            showToast('导入失败: ' + (progress.message || ''), 'error')
-          } else {
-            setTimeout(poll, 1000)
-          }
-        } catch (err) {
-          console.error('Poll progress error:', err)
-          setTimeout(poll, 1000)
-        }
-      }
-      poll()
-    }
-
-    const getStatusText = (status) => {
-      const statusMap = {
-        'uploading': '正在上传...',
-        'parsing': '正在解析...',
-        'importing': '正在导入...',
-        'completed': '导入完成',
-        'failed': '导入失败'
-      }
-      return statusMap[status] || status
     }
 
     const handleExport = async () => {
       try {
-        const response = await bookmarkApi.exportBookmarks()
-        const url = window.URL.createObjectURL(new Blob([response.data]))
+        await loadFromStorage()
+        // 如果有勾选，则只导出勾选的书签；否则导出全部
+        const bookmarkList = selectedBookmarks.value.length > 0
+          ? bookmarks.value.filter(b => selectedBookmarks.value.includes(b.id))
+          : bookmarks.value
+
+        if (bookmarkList.length === 0) {
+          showToast('没有可导出的书签', 'error')
+          return
+        }
+
+        // 按分类分组书签
+        const categoryMap = new Map()
+        const uncategorized = []
+
+        bookmarkList.forEach(bm => {
+          if (bm.categoryId) {
+            const category = categories.value.find(c => c.id === bm.categoryId)
+            const catName = category ? category.name : '未分类'
+            if (!categoryMap.has(catName)) {
+              categoryMap.set(catName, [])
+            }
+            categoryMap.get(catName).push(bm)
+          } else {
+            uncategorized.push(bm)
+          }
+        })
+
+        // 生成 Netscape Bookmark 格式的 HTML
+        const escapeHtml = (str) => {
+          return str.replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+        }
+
+        const generateBookmarkItem = (bm) => {
+          const addDate = bm.createdAt ? Math.floor(new Date(bm.createdAt).getTime() / 1000) : Math.floor(Date.now() / 1000)
+          return `           <DT><A HREF="${escapeHtml(bm.url)}" ADD_DATE="${addDate}">${escapeHtml(bm.title)}</A>`
+        }
+
+        let htmlContent = `<!DOCTYPE NETSCAPE-Bookmark-file-1>
+<!-- This is an automatically generated file.
+      It will be read and overwritten.
+      DO NOT EDIT! -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+<TITLE>Bookmarks</TITLE>
+<H1>Bookmarks</H1>
+<DL><p>
+    <DT><H3 ADD_DATE="${Math.floor(Date.now() / 1000)}" LAST_MODIFIED="${Math.floor(Date.now() / 1000)}" PERSONAL_TOOLBAR_FOLDER="true">书签栏</H3>
+    <DL><p>
+`
+
+        // 导出有分类的书签
+        categoryMap.forEach((bookmarks, categoryName) => {
+          const addDate = Math.floor(Date.now() / 1000)
+          htmlContent += `        <DT><H3 ADD_DATE="${addDate}" LAST_MODIFIED="${addDate}">${escapeHtml(categoryName)}</H3>\n`
+          htmlContent += `        <DL><p>\n`
+          bookmarks.forEach(bm => {
+            htmlContent += generateBookmarkItem(bm) + '\n'
+          })
+          htmlContent += `        </DL><p>\n`
+        })
+
+        // 导出未分类的书签
+        if (uncategorized.length > 0) {
+          const addDate = Math.floor(Date.now() / 1000)
+          htmlContent += `        <DT><H3 ADD_DATE="${addDate}" LAST_MODIFIED="${addDate}">未分类</H3>\n`
+          htmlContent += `        <DL><p>\n`
+          uncategorized.forEach(bm => {
+            htmlContent += generateBookmarkItem(bm) + '\n'
+          })
+          htmlContent += `        </DL><p>\n`
+        }
+
+        htmlContent += `    </DL><p>
+</DL><p>
+`
+
+        const blob = new Blob([htmlContent], { type: 'text/html; charset=UTF-8' })
+        const url = URL.createObjectURL(blob)
         const link = document.createElement('a')
         link.href = url
-        const contentDisposition = response.headers['content-disposition']
-        let fileName = 'bookmarks.html'
-        if (contentDisposition) {
-          const fileNameMatch = contentDisposition.match(/filename=(.+)/)
-          if (fileNameMatch.length === 2) fileName = fileNameMatch[1]
-        }
-        link.setAttribute('download', fileName)
+        link.download = `bookmarks_${new Date().toISOString().split('T')[0]}.html`
         document.body.appendChild(link)
         link.click()
         link.remove()
-        window.URL.revokeObjectURL(url)
+        URL.revokeObjectURL(url)
+
+        showToast(`成功导出 ${bookmarkList.length} 个书签`)
       } catch (err) {
         showToast('导出失败', 'error')
         console.error(err)
@@ -530,28 +584,15 @@ export default {
       return date.toLocaleDateString()
     }
 
-    const formatDate = (dateString) => {
-      const date = new Date(dateString)
-      return date.toLocaleString()
-    }
-
     onMounted(() => {
-      if (sharedState.bookmarks.length === 0) {
-        fetchBookmarks()
-      }
-      if (sharedState.categories.length === 0) {
-        fetchCategories()
-      }
+      fetchBookmarks()
       needsAnimation.value = true
     })
 
-    onActivated(() => {
-      initialLoading.value = false
-      needsAnimation.value = false
-    })
-
     return {
-      initialLoading,
+      bookmarks,
+      categories,
+      loading,
       error,
       selectedBookmarks,
       allSelected,
@@ -562,17 +603,10 @@ export default {
       currentPage,
       visiblePages,
       importing,
-      uploadProgress,
-      importProgress,
-      importStatus,
       importStatusText,
-      importedCount,
-      currentProgressPercent,
       toast,
       confirmDialog,
-      showConfirm,
-      cancelConfirm,
-      executeConfirm,
+      needsAnimation,
       getCategoryById,
       handleClick,
       deleteBookmark,
@@ -582,8 +616,9 @@ export default {
       handleImport,
       handleExport,
       formatLastClicked,
-      formatDate,
-      needsAnimation
+      showConfirm,
+      cancelConfirm,
+      executeConfirm
     }
   }
 }
@@ -640,6 +675,8 @@ export default {
   font-weight: 500;
   transition: all 0.2s;
   box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  border: none;
+  cursor: pointer;
 }
 
 .btn-add:hover {
@@ -700,86 +737,12 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.75rem;
 }
 
 .progress-status {
   font-size: 14px;
   color: #333;
   font-weight: 500;
-}
-
-.progress-percent {
-  font-size: 16px;
-  color: #667eea;
-  font-weight: 700;
-}
-
-.progress-stages {
-  display: flex;
-  gap: 1.5rem;
-}
-
-.stage {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.stage-bar {
-  height: 10px;
-  background-color: #e9ecef;
-  border-radius: 5px;
-  overflow: hidden;
-}
-
-.stage-fill {
-  height: 100%;
-  transition: width 0.3s ease;
-  border-radius: 5px;
-}
-
-.stage.active .stage-fill {
-  background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
-  animation: pulse 1.5s infinite;
-}
-
-.stage.completed .stage-fill {
-  background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
-}
-
-.stage:not(.active):not(.completed) .stage-fill {
-  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
-}
-
-.stage-label {
-  font-size: 12px;
-  color: #999;
-  text-align: center;
-}
-
-.stage.active .stage-label {
-  color: #4facfe;
-  font-weight: 500;
-}
-
-.stage.completed .stage-label {
-  color: #43e97b;
-  font-weight: 500;
-}
-
-.progress-details {
-  width: 100%;
-  margin-top: 0.5rem;
-  font-size: 13px;
-  color: #999;
-  text-align: center;
 }
 
 .btn-delete-batch {
@@ -1049,6 +1012,7 @@ export default {
   font-weight: 500;
   transition: all 0.2s;
   text-decoration: none;
+  background: transparent;
 }
 
 .action-icon {

@@ -7,7 +7,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/categories")
@@ -49,5 +51,19 @@ public class CategoryController {
     public ResponseEntity<Void> deleteCategory(@PathVariable Long id) {
         categoryService.deleteCategory(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/batch-delete")
+    public ResponseEntity<Void> deleteCategoriesBatch(@RequestBody List<Long> ids) {
+        categoryService.deleteCategoriesBatch(ids);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/empty")
+    public ResponseEntity<Map<String, Object>> deleteEmptyCategories() {
+        int deletedCount = categoryService.deleteEmptyCategories();
+        Map<String, Object> result = new HashMap<>();
+        result.put("deletedCount", deletedCount);
+        return ResponseEntity.ok(result);
     }
 }

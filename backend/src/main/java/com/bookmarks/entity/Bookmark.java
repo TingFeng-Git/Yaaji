@@ -10,10 +10,10 @@ public class Bookmark {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 500)
     private String title;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 2000, unique = true)
     private String url;
 
     @Column(length = 500)
@@ -27,6 +27,9 @@ public class Bookmark {
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    @Column(name = "last_clicked_at")
+    private LocalDateTime lastClickedAt;
 
     @PrePersist
     protected void onCreate() {
@@ -93,5 +96,13 @@ public class Bookmark {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public LocalDateTime getLastClickedAt() {
+        return lastClickedAt;
+    }
+
+    public void setLastClickedAt(LocalDateTime lastClickedAt) {
+        this.lastClickedAt = lastClickedAt;
     }
 }

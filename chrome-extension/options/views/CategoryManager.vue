@@ -122,18 +122,18 @@
 
 <script>
 import { ref, computed, watch, onMounted } from 'vue'
-import { categoryApi } from '../services/api'
-import { sharedState } from '../store/sharedState'
+import { useBookmarkStore } from '../../shared/store/bookmarkStore.js'
 
 export default {
   name: 'CategoryManager',
   setup() {
+    const { categories, bookmarks, categoryApi, loadFromStorage } = useBookmarkStore()
+    
     const loading = ref(false)
     const error = ref(null)
     const showAddModal = ref(false)
     const showEditModal = ref(false)
     const form = ref({ id: null, name: '', color: '#667eea' })
-    const deleteTargetId = ref(null)
     const searchKeyword = ref('')
     const selectedCategories = ref([])
     const currentPage = ref(1)
@@ -176,7 +176,7 @@ export default {
     const colorOptions = [
       '#667eea', '#764ba2', '#f093fb', '#f5576c',
       '#4facfe', '#00f2fe', '#43e97b', '#38f9d7',
-      '#fa709a', '#fee140', '#fa709a', '#a8edea'
+      '#fa709a', '#fee140', '#a8edea', '#ff6b6b'
     ]
 
     const hasSearch = computed(() => {
@@ -185,10 +185,10 @@ export default {
 
     const filteredCategories = computed(() => {
       if (!searchKeyword.value.trim()) {
-        return sharedState.categories
+        return categories.value
       }
       const keyword = searchKeyword.value.toLowerCase().trim()
-      return sharedState.categories.filter(cat =>
+      return categories.value.filter(cat =>
         cat.name.toLowerCase().includes(keyword)
       )
     })
@@ -233,8 +233,7 @@ export default {
       loading.value = true
       error.value = null
       try {
-        const response = await categoryApi.getAll()
-        sharedState.categories = response.data
+        await loadFromStorage()
       } catch (err) {
         error.value = '获取分类失败'
         console.error(err)
@@ -270,35 +269,49 @@ export default {
     }
 
     const deleteCategory = (id) => {
+      // 检查该分类下是否有书签
+      const bookmarksInCategory = bookmarks.value.filter(b => b.categoryId === id)
+      if (bookmarksInCategory.length > 0) {
+        showToast(`该分类下有 ${bookmarksInCategory.length} 个书签，请先删除这些书签后再删除分类`, 'error')
+        return
+      }
+
       showConfirm('确定要删除这个分类吗？', async () => {
         try {
           await categoryApi.delete(id)
-          const index = sharedState.categories.findIndex(c => c.id === id)
+          const index = categories.value.findIndex(c => c.id === id)
           if (index !== -1) {
-            sharedState.categories.splice(index, 1)
+            categories.value.splice(index, 1)
           }
           selectedCategories.value = selectedCategories.value.filter(cid => cid !== id)
           showToast('删除成功')
         } catch (err) {
-          const message = err.response?.data?.message || err.message || '删除分类失败'
-          showToast(message, 'error')
+          showToast('删除分类失败', 'error')
           console.error(err)
         }
       })
     }
 
     const deleteSelectedCategories = () => {
+      // 检查选中的分类是否有书签
+      const categoriesWithBookmarks = selectedCategories.value.filter(catId => {
+        return bookmarks.value.some(b => b.categoryId === catId)
+      })
+      if (categoriesWithBookmarks.length > 0) {
+        showToast('选中的分类中包含有书签的分类，请先删除这些书签后再删除分类', 'error')
+        return
+      }
+
       showConfirm(`确定要删除选中的 ${selectedCategories.value.length} 个分类吗？`, async () => {
         try {
           await categoryApi.deleteBatch(selectedCategories.value)
-          sharedState.categories = sharedState.categories.filter(
+          categories.value = categories.value.filter(
             c => !selectedCategories.value.includes(c.id)
           )
           selectedCategories.value = []
           showToast('批量删除成功')
         } catch (err) {
-          const message = err.response?.data?.message || err.message || '批量删除失败'
-          showToast(message, 'error')
+          showToast('批量删除失败', 'error')
           console.error(err)
         }
       })
@@ -307,14 +320,12 @@ export default {
     const deleteEmptyCategories = () => {
       showConfirm('确定要删除所有没有书签的分类吗？', async () => {
         try {
-          const response = await categoryApi.deleteEmpty()
-          const count = response.data.deletedCount
+          await categoryApi.deleteEmpty()
           await fetchCategories()
           selectedCategories.value = []
-          showToast(count > 0 ? `已删除 ${count} 个空分类` : '没有空分类需要删除')
+          showToast('已删除空分类')
         } catch (err) {
-          const message = err.response?.data?.message || err.message || '删除空分类失败'
-          showToast(message, 'error')
+          showToast('删除空分类失败', 'error')
           console.error(err)
         }
       })
@@ -324,14 +335,14 @@ export default {
       try {
         if (showEditModal.value) {
           await categoryApi.update(form.value.id, form.value)
-          const index = sharedState.categories.findIndex(c => c.id === form.value.id)
+          const index = categories.value.findIndex(c => c.id === form.value.id)
           if (index !== -1) {
-            sharedState.categories[index] = { ...form.value }
+            categories.value[index] = { ...form.value }
           }
           showToast('修改成功')
         } else {
           const response = await categoryApi.create(form.value)
-          sharedState.categories.push(response.data)
+          categories.value.push(response.data)
           showToast('添加成功')
         }
         closeModal()
@@ -352,13 +363,13 @@ export default {
     })
 
     onMounted(() => {
-      if (sharedState.categories.length === 0) {
+      if (categories.value.length === 0) {
         fetchCategories()
       }
     })
 
     return {
-      sharedState,
+      categories,
       loading,
       error,
       showAddModal,
@@ -390,7 +401,8 @@ export default {
       prevPage
     }
   }
-}</script>
+}
+</script>
 
 <style scoped>
 .category-manager {

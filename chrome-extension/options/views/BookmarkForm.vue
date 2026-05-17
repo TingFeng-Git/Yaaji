@@ -2,7 +2,7 @@
   <div class="bookmark-form">
     <div class="form-header">
       <h2>{{ isEdit ? '编辑书签' : '添加书签' }}</h2>
-      <router-link to="/" class="btn-back">← 返回列表</router-link>
+      <button @click="$emit('cancel')" class="btn-back">← 返回列表</button>
     </div>
     <div v-if="loading" class="loading">加载中...</div>
     <div v-else-if="error" class="error">{{ error }}</div>
@@ -33,7 +33,7 @@
         <label for="category">分类</label>
         <select id="category" v-model="form.categoryId">
           <option :value="null">未分类</option>
-          <option v-for="category in sharedState.categories" :key="category.id" :value="category.id">
+          <option v-for="category in categories" :key="category.id" :value="category.id">
             {{ category.name }}
           </option>
         </select>
@@ -43,7 +43,7 @@
         <textarea id="description" v-model="form.description" placeholder="请输入书签描述（可选）" rows="4"></textarea>
       </div>
       <div class="form-actions">
-        <router-link to="/" class="btn-cancel">取消</router-link>
+        <button type="button" @click="$emit('cancel')" class="btn-cancel">取消</button>
         <button type="submit" class="btn-save" :disabled="loading || urlExists">
           {{ isEdit ? '保存修改' : '添加书签' }}
         </button>
@@ -58,21 +58,21 @@
 </template>
 
 <script>
-import { ref, onMounted, onActivated, computed } from 'vue'
-import { useRouter } from 'vue-router'
-import { bookmarkApi, categoryApi, urlApi } from '../services/api'
-import { sharedState } from '../store/sharedState'
+import { ref, computed, onMounted } from 'vue'
+import { useBookmarkStore } from '../../shared/store/bookmarkStore.js'
 
 export default {
   name: 'BookmarkForm',
   props: {
-    id: {
+    editId: {
       type: String,
       default: null
     }
   },
-  setup(props) {
-    const router = useRouter()
+  emits: ['saved', 'cancel'],
+  setup(props, { emit }) {
+    const { bookmarks, categories, bookmarkApi, categoryApi, urlApi, loadFromStorage } = useBookmarkStore()
+    
     const form = ref({
       title: '',
       url: '',
@@ -84,7 +84,6 @@ export default {
     const fetchingTitle = ref(false)
     const titleHint = ref('')
     const urlExists = ref(false)
-    const existingBookmark = ref(null)
 
     const toast = ref({
       show: false,
@@ -100,7 +99,6 @@ export default {
         categoryId: null
       }
       urlExists.value = false
-      existingBookmark.value = null
       titleHint.value = ''
       error.value = null
     }
@@ -112,15 +110,18 @@ export default {
       }, 3000)
     }
 
-    const isEdit = computed(() => !!props.id)
+    const isEdit = computed(() => !!props.editId)
 
     const fetchBookmark = async () => {
       if (isEdit.value) {
         loading.value = true
         error.value = null
         try {
-          const response = await bookmarkApi.getById(props.id)
-          form.value = response.data
+          await loadFromStorage()
+          const bookmark = bookmarks.value.find(b => b.id === props.editId)
+          if (bookmark) {
+            form.value = { ...bookmark }
+          }
         } catch (err) {
           error.value = '获取书签信息失败'
           console.error(err)
@@ -131,10 +132,9 @@ export default {
     }
 
     const fetchCategories = async () => {
-      if (sharedState.categories.length === 0) {
+      if (categories.value.length === 0) {
         try {
-          const response = await categoryApi.getAll()
-          sharedState.categories = response.data
+          await loadFromStorage()
         } catch (err) {
           console.error('获取分类失败', err)
         }
@@ -144,15 +144,18 @@ export default {
     const checkUrlExists = async (url) => {
       if (!url || isEdit.value) {
         urlExists.value = false
-        existingBookmark.value = null
         return
       }
       try {
         const response = await bookmarkApi.checkUrl(url)
-        urlExists.value = response.data.exists
-        existingBookmark.value = response.data.bookmark || null
+        if (response && response.data && typeof response.data.exists === 'boolean') {
+          urlExists.value = response.data.exists
+        } else {
+          urlExists.value = false
+        }
       } catch (err) {
         console.error('检查URL失败', err)
+        urlExists.value = false
       }
     }
 
@@ -163,7 +166,7 @@ export default {
         return
       }
       await checkUrlExists(url)
-      if (!urlExists.value) {
+      if (!urlExists.value && !form.value.title) {
         fetchTitle()
       }
     }
@@ -183,8 +186,8 @@ export default {
       titleHint.value = '正在获取网站标题...'
       try {
         const response = await urlApi.getTitle(url)
-        if (response.data.title && response.data.title.trim() !== '') {
-          form.value.title = response.data.title
+        if (response.data && response.data.trim() !== '') {
+          form.value.title = response.data
           titleHint.value = '已自动获取标题'
         } else {
           titleHint.value = '未能获取标题，请手动输入'
@@ -202,10 +205,9 @@ export default {
 
     const saveBookmark = async () => {
       if (!isEdit.value) {
-        // 直接调用后端API检查URL是否存在，不依赖前端缓存
         try {
           const response = await bookmarkApi.checkUrl(form.value.url)
-          if (response.data.exists) {
+          if (response && response.data && response.data.exists) {
             showToast('该网址已存在，无法重复添加', 'error')
             return
           }
@@ -226,18 +228,19 @@ export default {
           categoryId: form.value.categoryId
         }
         if (isEdit.value) {
-          await bookmarkApi.update(props.id, data)
-          const index = sharedState.bookmarks.findIndex(b => b.id === parseInt(props.id))
+          await bookmarkApi.update(props.editId, data)
+          const index = bookmarks.value.findIndex(b => b.id === props.editId)
           if (index !== -1) {
-            sharedState.bookmarks[index] = { ...sharedState.bookmarks[index], ...data }
+            bookmarks.value[index] = { ...bookmarks.value[index], ...data }
           }
         } else {
           const result = await bookmarkApi.create(data)
-          sharedState.bookmarks.unshift(result.data)
+          bookmarks.value.unshift(result.data)
         }
-        router.push('/')
+        emit('saved')
       } catch (err) {
         error.value = '保存书签失败'
+        showToast('保存书签失败', 'error')
         console.error(err)
       } finally {
         loading.value = false
@@ -252,22 +255,15 @@ export default {
       fetchCategories()
     })
 
-    onActivated(() => {
-      if (!isEdit.value) {
-        resetForm()
-      }
-    })
-
     return {
       form,
-      sharedState,
+      categories,
       loading,
       error,
       isEdit,
       fetchingTitle,
       titleHint,
       urlExists,
-      existingBookmark,
       toast,
       resetForm,
       handleUrlBlur,
@@ -320,6 +316,9 @@ export default {
   font-size: 14px;
   font-weight: 500;
   transition: color 0.2s;
+  background: transparent;
+  border: none;
+  cursor: pointer;
 }
 
 .btn-back:hover {
