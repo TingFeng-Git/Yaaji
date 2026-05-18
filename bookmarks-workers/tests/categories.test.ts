@@ -13,9 +13,9 @@ describe('Category API', () => {
     db = createMockDB()
   })
 
-  describe('GET /categories', () => {
+  describe('GET /api/categories', () => {
     it('should return empty array when no categories exist', async () => {
-      const res = await app.request('/categories', {}, env(db))
+      const res = await app.request('/api/categories', {}, env(db))
       expect(res.status).toBe(200)
       const data = await res.json()
       expect(Array.isArray(data)).toBe(true)
@@ -28,16 +28,16 @@ describe('Category API', () => {
         { id: 2, name: 'News', color: '#00ff00', created_at: '2024-01-02' },
       ])
 
-      const res = await app.request('/categories', {}, env(db))
+      const res = await app.request('/api/categories', {}, env(db))
       expect(res.status).toBe(200)
       const data = await res.json()
       expect(data).toHaveLength(2)
     })
   })
 
-  describe('GET /categories/:id', () => {
+  describe('GET /api/categories/:id', () => {
     it('should return 404 for non-existent category', async () => {
-      const res = await app.request('/categories/999', {}, env(db))
+      const res = await app.request('/api/categories/999', {}, env(db))
       expect(res.status).toBe(404)
       const data = await res.json()
       expect(data.error).toContain('Category not found')
@@ -48,7 +48,7 @@ describe('Category API', () => {
         { id: 1, name: 'Tech', color: '#ff0000', created_at: '2024-01-01' },
       ])
 
-      const res = await app.request('/categories/1', {}, env(db))
+      const res = await app.request('/api/categories/1', {}, env(db))
       expect(res.status).toBe(200)
       const data = await res.json()
       expect(data.name).toBe('Tech')
@@ -56,9 +56,9 @@ describe('Category API', () => {
     })
   })
 
-  describe('POST /categories', () => {
+  describe('POST /api/categories', () => {
     it('should create a category', async () => {
-      const res = await app.request('/categories', {
+      const res = await app.request('/api/categories', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: 'New Category', color: '#abc123' }),
@@ -70,7 +70,7 @@ describe('Category API', () => {
     })
 
     it('should use default color when not provided', async () => {
-      const res = await app.request('/categories', {
+      const res = await app.request('/api/categories', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: 'No Color' }),
@@ -81,7 +81,7 @@ describe('Category API', () => {
     })
 
     it('should return 400 when name is empty', async () => {
-      const res = await app.request('/categories', {
+      const res = await app.request('/api/categories', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: '' }),
@@ -90,7 +90,7 @@ describe('Category API', () => {
     })
 
     it('should return 400 when name is whitespace only', async () => {
-      const res = await app.request('/categories', {
+      const res = await app.request('/api/categories', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: '   ' }),
@@ -99,9 +99,9 @@ describe('Category API', () => {
     })
   })
 
-  describe('PUT /categories/:id', () => {
+  describe('PUT /api/categories/:id', () => {
     it('should return 404 for non-existent category', async () => {
-      const res = await app.request('/categories/999', {
+      const res = await app.request('/api/categories/999', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: 'Updated' }),
@@ -114,7 +114,7 @@ describe('Category API', () => {
         { id: 1, name: 'Old', color: '#000', created_at: '2024-01-01' },
       ])
 
-      const res = await app.request('/categories/1', {
+      const res = await app.request('/api/categories/1', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: '' }),
@@ -127,7 +127,7 @@ describe('Category API', () => {
         { id: 1, name: 'Old', color: '#000', created_at: '2024-01-01' },
       ])
 
-      const res = await app.request('/categories/1', {
+      const res = await app.request('/api/categories/1', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: 'Updated', color: '#fff' }),
@@ -139,26 +139,43 @@ describe('Category API', () => {
     })
   })
 
-  describe('DELETE /categories/:id', () => {
+  describe('DELETE /api/categories/:id', () => {
     it('should return 404 for non-existent category', async () => {
-      const res = await app.request('/categories/999', { method: 'DELETE' }, env(db))
+      const res = await app.request('/api/categories/999', { method: 'DELETE' }, env(db))
       expect(res.status).toBe(404)
     })
 
-    it('should delete an existing category', async () => {
+    it('should delete an existing category without bookmarks', async () => {
       db.seed('categories', [
         { id: 1, name: 'ToDelete', color: '#000', created_at: '2024-01-01' },
       ])
 
-      const res = await app.request('/categories/1', { method: 'DELETE' }, env(db))
+      const res = await app.request('/api/categories/1', { method: 'DELETE' }, env(db))
       expect(res.status).toBe(204)
       expect(db.getAll('categories')).toHaveLength(0)
     })
+
+    it('should return 400 when category has bookmarks', async () => {
+      db.seed('categories', [
+        { id: 1, name: 'HasBookmarks', color: '#000', created_at: '2024-01-01' },
+      ])
+      db.seed('bookmarks', [
+        { id: 1, title: 'B', url: 'https://b.com', description: '', category_id: 1, click_count: 0, created_at: '2024-01-01', updated_at: '2024-01-01', last_clicked_at: null },
+      ])
+
+      const res = await app.request('/api/categories/1', { method: 'DELETE' }, env(db))
+      expect(res.status).toBe(400)
+      const data = await res.json()
+      expect(data.error).toContain('该分类下存在数据')
+
+      // Category should still exist
+      expect(db.getAll('categories')).toHaveLength(1)
+    })
   })
 
-  describe('POST /categories/batch-delete', () => {
+  describe('POST /api/categories/batch-delete', () => {
     it('should return 400 for empty array', async () => {
-      const res = await app.request('/categories/batch-delete', {
+      const res = await app.request('/api/categories/batch-delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify([]),
@@ -166,14 +183,14 @@ describe('Category API', () => {
       expect(res.status).toBe(400)
     })
 
-    it('should delete multiple categories', async () => {
+    it('should delete multiple categories without bookmarks', async () => {
       db.seed('categories', [
         { id: 1, name: 'A', color: '#000', created_at: '2024-01-01' },
         { id: 2, name: 'B', color: '#000', created_at: '2024-01-02' },
         { id: 3, name: 'C', color: '#000', created_at: '2024-01-03' },
       ])
 
-      const res = await app.request('/categories/batch-delete', {
+      const res = await app.request('/api/categories/batch-delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify([1, 3]),
@@ -181,9 +198,31 @@ describe('Category API', () => {
       expect(res.status).toBe(204)
       expect(db.getAll('categories')).toHaveLength(1)
     })
+
+    it('should return 400 when any category has bookmarks', async () => {
+      db.seed('categories', [
+        { id: 1, name: 'A', color: '#000', created_at: '2024-01-01' },
+        { id: 2, name: 'B', color: '#000', created_at: '2024-01-02' },
+      ])
+      db.seed('bookmarks', [
+        { id: 1, title: 'B', url: 'https://b.com', description: '', category_id: 1, click_count: 0, created_at: '2024-01-01', updated_at: '2024-01-01', last_clicked_at: null },
+      ])
+
+      const res = await app.request('/api/categories/batch-delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify([1, 2]),
+      }, env(db))
+      expect(res.status).toBe(400)
+      const data = await res.json()
+      expect(data.error).toContain('该分类下存在数据')
+
+      // Both categories should still exist
+      expect(db.getAll('categories')).toHaveLength(2)
+    })
   })
 
-  describe('DELETE /categories/empty', () => {
+  describe('DELETE /api/categories/empty', () => {
     it('should delete categories with no bookmarks', async () => {
       db.seed('categories', [
         { id: 1, name: 'Empty', color: '#000', created_at: '2024-01-01' },
@@ -193,7 +232,7 @@ describe('Category API', () => {
         { id: 1, title: 'B', url: 'https://b.com', description: '', category_id: 2, click_count: 0, created_at: '2024-01-01', updated_at: '2024-01-01', last_clicked_at: null },
       ])
 
-      const res = await app.request('/categories/empty', { method: 'DELETE' }, env(db))
+      const res = await app.request('/api/categories/empty', { method: 'DELETE' }, env(db))
       expect(res.status).toBe(200)
       const data = await res.json()
       expect(data.deletedCount).toBe(1)
@@ -209,7 +248,7 @@ describe('Category API', () => {
         { id: 1, title: 'B', url: 'https://b.com', description: '', category_id: 1, click_count: 0, created_at: '2024-01-01', updated_at: '2024-01-01', last_clicked_at: null },
       ])
 
-      const res = await app.request('/categories/empty', { method: 'DELETE' }, env(db))
+      const res = await app.request('/api/categories/empty', { method: 'DELETE' }, env(db))
       expect(res.status).toBe(200)
       const data = await res.json()
       expect(data.deletedCount).toBe(0)

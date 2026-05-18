@@ -311,6 +311,7 @@ export default {
         if (bookmark) {
           bookmark.lastClickedAt = new Date().toISOString()
         }
+        sharedState.recentRefreshKey++
       } catch (err) {
         logger.error('记录点击失败', err)
       }

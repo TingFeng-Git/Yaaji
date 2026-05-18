@@ -34,7 +34,7 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { bookmarkApi } from '../services/api'
 import { sharedState } from '../store/sharedState'
 import { logger } from '../services/logger'
@@ -46,7 +46,7 @@ export default {
 
     const fetchRecentBookmarks = async () => {
       try {
-        const response = await bookmarkApi.getRecent(5)
+        const response = await bookmarkApi.getRecent(3)
         recentBookmarks.value = response.data
       } catch (err) {
         logger.error('获取最近访问书签失败', err)
@@ -65,6 +65,7 @@ export default {
         if (bookmark) {
           bookmark.lastClickedAt = new Date().toISOString()
         }
+        sharedState.recentRefreshKey++
       } catch (err) {
         logger.error('记录点击失败', err)
       }
@@ -87,6 +88,10 @@ export default {
     }
 
     onMounted(() => {
+      fetchRecentBookmarks()
+    })
+
+    watch(() => sharedState.recentRefreshKey, () => {
       fetchRecentBookmarks()
     })
 

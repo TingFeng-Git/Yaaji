@@ -22,7 +22,7 @@ function mapBookmark(row: Record<string, unknown>) {
 // /recent and /check-url must be defined before /:id to avoid param capture
 bookmarkRoutes.get('/recent', async (c) => {
   const db = c.env.DB
-  const limit = Number(c.req.query('limit')) || 5
+  const limit = Math.min(Number(c.req.query('limit')) || 3, 3)
 
   const { results } = await db
     .prepare('SELECT * FROM bookmarks WHERE last_clicked_at IS NOT NULL ORDER BY last_clicked_at DESC LIMIT ?')

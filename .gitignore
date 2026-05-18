@@ -81,6 +81,7 @@ dist-ssr/
 .env.*.local
 .env.production
 .env.development
+.dev.vars
 
 # Logs
 logs
@@ -119,3 +120,5 @@ h2db/
 .cache/
 
 .trae/
+
+bookmarks_2026-05-18.html

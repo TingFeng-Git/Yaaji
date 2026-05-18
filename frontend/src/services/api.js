@@ -8,7 +8,7 @@ const api = axios.create({
 export const bookmarkApi = {
   getAll: () => api.get('/api/bookmarks'),
   getById: (id) => api.get(`/api/bookmarks/${id}`),
-  getRecent: (limit = 5) => api.get('/api/bookmarks/recent', { params: { limit } }),
+  getRecent: (limit = 3) => api.get('/api/bookmarks/recent', { params: { limit } }),
   checkUrl: (url) => api.get('/api/bookmarks/check-url', { params: { url } }),
   create: (bookmark) => api.post('/api/bookmarks', bookmark),
   update: (id, bookmark) => api.put(`/api/bookmarks/${id}`, bookmark),

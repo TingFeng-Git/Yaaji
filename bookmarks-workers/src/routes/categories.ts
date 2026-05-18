@@ -77,9 +77,14 @@ categoryRoutes.post('/batch-delete', async (c) => {
     return c.json({ error: 'IDs array is required' }, 400)
   }
 
-  await db.prepare('PRAGMA foreign_keys = ON').run()
-
   const placeholders = ids.map(() => '?').join(', ')
+  const hasBookmark = await db.prepare(
+    `SELECT id FROM bookmarks WHERE category_id IN (${placeholders}) LIMIT 1`
+  ).bind(...ids).first()
+  if (hasBookmark) {
+    return c.json({ error: '该分类下存在数据，无法删除' }, 400)
+  }
+
   const stmt = db.prepare(`DELETE FROM categories WHERE id IN (${placeholders})`).bind(...ids)
   await stmt.run()
 
@@ -113,7 +118,11 @@ categoryRoutes.delete('/:id', async (c) => {
     return c.json({ error: `Category not found with id: ${id}` }, 404)
   }
 
-  await db.prepare('PRAGMA foreign_keys = ON').run()
+  const hasBookmark = await db.prepare('SELECT id FROM bookmarks WHERE category_id = ? LIMIT 1').bind(id).first()
+  if (hasBookmark) {
+    return c.json({ error: '该分类下存在数据，无法删除' }, 400)
+  }
+
   await db.prepare('DELETE FROM categories WHERE id = ?').bind(id).run()
 
   return c.body(null, 204)

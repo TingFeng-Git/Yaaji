@@ -281,7 +281,7 @@ export default {
           selectedCategories.value = selectedCategories.value.filter(cid => cid !== id)
           showToast('删除成功')
         } catch (err) {
-          const message = err.response?.data?.message || err.message || '删除分类失败'
+          const message = err.response?.data?.error || err.response?.data?.message || err.message || '删除分类失败'
           showToast(message, 'error')
           logger.error(err)
         }
@@ -298,7 +298,7 @@ export default {
           selectedCategories.value = []
           showToast('批量删除成功')
         } catch (err) {
-          const message = err.response?.data?.message || err.message || '批量删除失败'
+          const message = err.response?.data?.error || err.response?.data?.message || err.message || '批量删除失败'
           showToast(message, 'error')
           logger.error(err)
         }
@@ -314,7 +314,7 @@ export default {
           selectedCategories.value = []
           showToast(count > 0 ? `已删除 ${count} 个空分类` : '没有空分类需要删除')
         } catch (err) {
-          const message = err.response?.data?.message || err.message || '删除空分类失败'
+          const message = err.response?.data?.error || err.response?.data?.message || err.message || '删除空分类失败'
           showToast(message, 'error')
           logger.error(err)
         }
