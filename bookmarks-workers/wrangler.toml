@@ -7,16 +7,12 @@ compatibility_flags = ["nodejs_compat"]
 [dev]
 port = 8787
 
-# D1 数据库绑定（请替换为你的真实 Database ID）
+# D1 数据库绑定（部署前请替换为你的真实 Database ID）
+# 可通过 `npx wrangler d1 info yaaji-bookmarks` 获取
 [[d1_databases]]
 binding = "DB"
 database_name = "yaaji-bookmarks"
-database_id = "47671840-7144-4958-ab80-16e88e847c1e"
-
-# 环境变量（生产环境通过 Cloudflare Dashboard 设置）
-[vars]
-ENVIRONMENT = "production"
-CORS_ORIGIN = "https://yaaji.pages.dev"
+database_id = "<your-database-id>"
 
 # Durable Objects 配置
 [[durable_objects.bindings]]
