@@ -65,13 +65,18 @@ bookmarkRoutes.get('/', async (c) => {
 
   query += ' ORDER BY created_at DESC'
 
-  const stmt = params.length > 0
-    ? db.prepare(query).bind(...params)
-    : db.prepare(query)
+  try {
+    const stmt = params.length > 0
+      ? db.prepare(query).bind(...params)
+      : db.prepare(query)
 
-  const { results } = await stmt.all()
+    const { results } = await stmt.all()
 
-  return c.json((results || []).map(mapBookmark))
+    return c.json((results || []).map(mapBookmark))
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    return c.json({ error: message }, 500)
+  }
 })
 
 bookmarkRoutes.get('/:id', async (c) => {

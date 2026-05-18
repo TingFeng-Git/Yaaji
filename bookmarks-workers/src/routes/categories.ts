@@ -5,8 +5,13 @@ export const categoryRoutes = new Hono<{ Bindings: Env }>()
 
 categoryRoutes.get('/', async (c) => {
   const db = c.env.DB
-  const { results } = await db.prepare('SELECT * FROM categories ORDER BY created_at DESC').all()
-  return c.json(results)
+  try {
+    const { results } = await db.prepare('SELECT * FROM categories ORDER BY created_at DESC').all()
+    return c.json(results)
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    return c.json({ error: message }, 500)
+  }
 })
 
 categoryRoutes.get('/:id', async (c) => {
