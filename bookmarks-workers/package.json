@@ -1,0 +1,35 @@
+{
+  "name": "yaji-bookmarks-workers",
+  "version": "1.0.0",
+  "description": "雅集 - 书签管理 Cloudflare Workers",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "dev:remote": "wrangler dev --remote",
+    "build": "wrangler deploy --dry-run --outdir=dist",
+    "deploy": "wrangler deploy",
+    "deploy:prod": "wrangler deploy --env production",
+    "tail": "wrangler tail",
+    "tail:prod": "wrangler tail --env production",
+    "db:create": "wrangler d1 create yaji-bookmarks",
+    "db:setup": "bash setup.sh",
+    "db:migrate": "wrangler d1 execute yaji-bookmarks --file=schema.sql",
+    "db:reset": "wrangler d1 execute yaji-bookmarks --file=schema.sql",
+    "db:query": "wrangler d1 execute yaji-bookmarks --command",
+    "db:list": "wrangler d1 list",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "cheerio": "^1.2.0",
+    "hono": "^4.4.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240620.0",
+    "typescript": "^5.5.0",
+    "vitest": "^4.1.6",
+    "wrangler": "^3.60.0"
+  }
+}

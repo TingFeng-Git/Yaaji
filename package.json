@@ -1,0 +1,36 @@
+{
+  "name": "yaji-bookmarks",
+  "version": "1.0.0",
+  "description": "雅集 - 书签管理工具 (Cloudflare Migration)",
+  "private": true,
+  "workspaces": [
+    "bookmarks-workers",
+    "frontend",
+    "chrome-extension"
+  ],
+  "scripts": {
+    "dev": "npm run dev:workers",
+    "dev:workers": "npm run dev --workspace=bookmarks-workers",
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "dev:extension": "npm run dev --workspace=chrome-extension",
+    "build": "npm run build --workspaces",
+    "build:workers": "npm run build --workspace=bookmarks-workers",
+    "build:frontend": "npm run build --workspace=frontend",
+    "build:extension": "npm run build --workspace=chrome-extension",
+    "deploy": "npm run deploy --workspace=bookmarks-workers",
+    "deploy:frontend": "npx wrangler pages deploy ./frontend/dist --project-name bookmarks-frontend",
+    "db:setup": "bash bookmarks-workers/setup.sh",
+    "db:reset": "bash bookmarks-workers/setup.sh yaji-bookmarks-reset",
+    "db:migrate": "npm run db:migrate --workspace=bookmarks-workers",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "clean": "rm -rf node_modules */node_modules */dist",
+    "install:all": "npm install && npm install --workspace=frontend && npm install --workspace=chrome-extension"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "wrangler": "^3.60.0"
+  }
+}

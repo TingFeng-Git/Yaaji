@@ -1,29 +1,26 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import BookmarkList from '../views/BookmarkList.vue'
-import BookmarkForm from '../views/BookmarkForm.vue'
-import CategoryManager from '../views/CategoryManager.vue'
 
 const routes = [
   {
     path: '/',
     name: 'BookmarkList',
-    component: BookmarkList
+    component: () => import('../views/BookmarkList.vue')
   },
   {
     path: '/add',
     name: 'AddBookmark',
-    component: BookmarkForm
+    component: () => import('../views/BookmarkForm.vue')
   },
   {
     path: '/edit/:id',
     name: 'EditBookmark',
-    component: BookmarkForm,
+    component: () => import('../views/BookmarkForm.vue'),
     props: true
   },
   {
     path: '/categories',
     name: 'CategoryManager',
-    component: CategoryManager
+    component: () => import('../views/CategoryManager.vue')
   }
 ]
 

@@ -48,6 +48,7 @@ import { ref, provide, onMounted, computed } from 'vue'
 import { categoryApi } from './services/api'
 import { sharedState } from './store/sharedState'
 import SearchSelect from './components/SearchSelect.vue'
+import { logger } from './services/logger'
 
 export default {
   name: 'App',
@@ -66,7 +67,7 @@ export default {
         const response = await categoryApi.getAll()
         sharedState.categories = response.data
       } catch (err) {
-        console.error('获取分类失败', err)
+        logger.error('获取分类失败', err)
       }
     }
 

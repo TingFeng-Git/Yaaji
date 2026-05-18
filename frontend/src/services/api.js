@@ -1,13 +1,14 @@
 import axios from 'axios'
 
 const api = axios.create({
-  baseURL: 'http://localhost:8080/api',
+  baseURL: import.meta.env.VITE_API_URL || '/api',
   timeout: 60000
 })
 
 export const bookmarkApi = {
   getAll: () => api.get('/bookmarks'),
   getById: (id) => api.get(`/bookmarks/${id}`),
+  getRecent: (limit = 5) => api.get('/bookmarks/recent', { params: { limit } }),
   checkUrl: (url) => api.get('/bookmarks/check-url', { params: { url } }),
   create: (bookmark) => api.post('/bookmarks', bookmark),
   update: (id, bookmark) => api.put(`/bookmarks/${id}`, bookmark),

@@ -62,6 +62,7 @@ import { ref, onMounted, onActivated, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { bookmarkApi, categoryApi, urlApi } from '../services/api'
 import { sharedState } from '../store/sharedState'
+import { logger } from '../services/logger'
 
 export default {
   name: 'BookmarkForm',
@@ -123,7 +124,7 @@ export default {
           form.value = response.data
         } catch (err) {
           error.value = '获取书签信息失败'
-          console.error(err)
+          logger.error(err)
         } finally {
           loading.value = false
         }
@@ -136,7 +137,7 @@ export default {
           const response = await categoryApi.getAll()
           sharedState.categories = response.data
         } catch (err) {
-          console.error('获取分类失败', err)
+          logger.error('获取分类失败', err)
         }
       }
     }
@@ -152,7 +153,7 @@ export default {
         urlExists.value = response.data.exists
         existingBookmark.value = response.data.bookmark || null
       } catch (err) {
-        console.error('检查URL失败', err)
+        logger.error('检查URL失败', err)
       }
     }
 
@@ -191,7 +192,7 @@ export default {
         }
       } catch (err) {
         titleHint.value = '获取标题失败，请手动输入'
-        console.error(err)
+        logger.error(err)
       } finally {
         fetchingTitle.value = false
         setTimeout(() => {
@@ -210,7 +211,7 @@ export default {
             return
           }
         } catch (err) {
-          console.error('检查URL失败', err)
+          logger.error('检查URL失败', err)
           showToast('检查URL失败，请重试', 'error')
           return
         }
@@ -238,7 +239,7 @@ export default {
         router.push('/')
       } catch (err) {
         error.value = '保存书签失败'
-        console.error(err)
+        logger.error(err)
       } finally {
         loading.value = false
       }

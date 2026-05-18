@@ -124,6 +124,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { categoryApi } from '../services/api'
 import { sharedState } from '../store/sharedState'
+import { logger } from '../services/logger'
 
 export default {
   name: 'CategoryManager',
@@ -237,7 +238,7 @@ export default {
         sharedState.categories = response.data
       } catch (err) {
         error.value = '获取分类失败'
-        console.error(err)
+        logger.error(err)
       } finally {
         loading.value = false
       }
@@ -282,7 +283,7 @@ export default {
         } catch (err) {
           const message = err.response?.data?.message || err.message || '删除分类失败'
           showToast(message, 'error')
-          console.error(err)
+          logger.error(err)
         }
       })
     }
@@ -299,7 +300,7 @@ export default {
         } catch (err) {
           const message = err.response?.data?.message || err.message || '批量删除失败'
           showToast(message, 'error')
-          console.error(err)
+          logger.error(err)
         }
       })
     }
@@ -315,7 +316,7 @@ export default {
         } catch (err) {
           const message = err.response?.data?.message || err.message || '删除空分类失败'
           showToast(message, 'error')
-          console.error(err)
+          logger.error(err)
         }
       })
     }
@@ -337,7 +338,7 @@ export default {
         closeModal()
       } catch (err) {
         showToast('保存分类失败', 'error')
-        console.error(err)
+        logger.error(err)
       }
     }
 

@@ -1,5 +1,7 @@
 <template>
   <div class="bookmark-list" :class="{ 'no-animation': !needsAnimation }">
+    <RecentBookmarks />
+
     <div class="header-actions">
       <h2 class="section-title">我的书签</h2>
       <div class="header-buttons">
@@ -127,28 +129,7 @@
         </div>
       </div>
 
-      <div class="pagination" v-if="totalPages > 1">
-        <div class="pagination-info">
-          共 {{ filteredBookmarks.length }} 条，第 {{ currentPage }} / {{ totalPages }} 页
-        </div>
-        <div class="pagination-controls">
-          <button @click="currentPage = 1" :disabled="currentPage === 1" class="page-btn">首页</button>
-          <button @click="currentPage--" :disabled="currentPage === 1" class="page-btn">上一页</button>
-          <div class="page-numbers">
-            <button
-              v-for="page in visiblePages"
-              :key="page"
-              @click="currentPage = page"
-              class="page-btn"
-              :class="{ active: currentPage === page }"
-            >
-              {{ page }}
-            </button>
-          </div>
-          <button @click="currentPage++" :disabled="currentPage === totalPages" class="page-btn">下一页</button>
-          <button @click="currentPage = totalPages" :disabled="currentPage === totalPages" class="page-btn">末页</button>
-        </div>
-      </div>
+      <Pagination v-model="currentPage" :total-pages="totalPages" :total-items="filteredBookmarks.length" />
     </template>
 
     <div v-if="toast.show" class="toast" :class="toast.type">
@@ -157,16 +138,7 @@
       <button @click="toast.show = false" class="toast-close">×</button>
     </div>
 
-    <div v-if="confirmDialog.show" class="confirm-overlay">
-      <div class="confirm-dialog">
-        <div class="confirm-icon">⚠️</div>
-        <div class="confirm-message">{{ confirmDialog.message }}</div>
-        <div class="confirm-actions">
-          <button @click="cancelConfirm" class="confirm-btn cancel">取消</button>
-          <button @click="executeConfirm" class="confirm-btn confirm">确定</button>
-        </div>
-      </div>
-    </div>
+    <ConfirmDialog :show="confirmDialog.show" :message="confirmDialog.message" @confirm="executeConfirm" @cancel="cancelConfirm" />
   </div>
 </template>
 
@@ -174,9 +146,18 @@
 import { ref, computed, inject, onMounted, onActivated } from 'vue'
 import { bookmarkApi, categoryApi } from '../services/api'
 import { sharedState } from '../store/sharedState'
+import RecentBookmarks from '../components/RecentBookmarks.vue'
+import Pagination from '../components/Pagination.vue'
+import ConfirmDialog from '../components/ConfirmDialog.vue'
+import { logger } from '../services/logger'
 
 export default {
   name: 'BookmarkList',
+  components: {
+    RecentBookmarks,
+    Pagination,
+    ConfirmDialog,
+  },
   setup() {
     const initialLoading = ref(sharedState.bookmarks.length === 0)
     const error = ref(null)
@@ -294,27 +275,6 @@ export default {
       return filteredBookmarks.value.slice(start, end)
     })
 
-    const visiblePages = computed(() => {
-      const pages = []
-      const total = totalPages.value
-      const current = currentPage.value
-      let start = Math.max(1, current - 2)
-      let end = Math.min(total, current + 2)
-
-      if (end - start < 4) {
-        if (start === 1) {
-          end = Math.min(total, start + 4)
-        } else {
-          start = Math.max(1, end - 4)
-        }
-      }
-
-      for (let i = start; i <= end; i++) {
-        pages.push(i)
-      }
-      return pages
-    })
-
     const fetchBookmarks = async () => {
       error.value = null
       try {
@@ -326,7 +286,7 @@ export default {
         }
       } catch (err) {
         error.value = '获取书签失败'
-        console.error(err)
+        logger.error(err)
       }
     }
 
@@ -335,7 +295,7 @@ export default {
         const response = await categoryApi.getAll()
         sharedState.categories = response.data
       } catch (err) {
-        console.error('获取分类失败', err)
+        logger.error('获取分类失败', err)
       }
     }
 
@@ -352,7 +312,7 @@ export default {
           bookmark.lastClickedAt = new Date().toISOString()
         }
       } catch (err) {
-        console.error('记录点击失败', err)
+        logger.error('记录点击失败', err)
       }
     }
 
@@ -368,7 +328,7 @@ export default {
           }
         } catch (err) {
           showToast('删除书签失败', 'error')
-          console.error(err)
+          logger.error(err)
         }
       })
     }
@@ -382,7 +342,7 @@ export default {
           fetchBookmarks()
         } catch (err) {
           showToast('批量删除失败', 'error')
-          console.error(err)
+          logger.error(err)
         }
       })
     }
@@ -430,7 +390,7 @@ export default {
           }, 500)
         }
       } catch (err) {
-        console.error('Import error:', err)
+        logger.error('Import error:', err)
         importing.value = false
         uploadProgress.value = 0
         importProgress.value = 0
@@ -473,7 +433,7 @@ export default {
             setTimeout(poll, 1000)
           }
         } catch (err) {
-          console.error('Poll progress error:', err)
+          logger.error('Poll progress error:', err)
           setTimeout(poll, 1000)
         }
       }
@@ -510,7 +470,7 @@ export default {
         window.URL.revokeObjectURL(url)
       } catch (err) {
         showToast('导出失败', 'error')
-        console.error(err)
+        logger.error(err)
       }
     }
 
@@ -560,7 +520,7 @@ export default {
       paginatedBookmarks,
       totalPages,
       currentPage,
-      visiblePages,
+
       importing,
       uploadProgress,
       importProgress,
@@ -1075,62 +1035,6 @@ export default {
   color: #fff;
 }
 
-.pagination {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  margin-top: 1.5rem;
-  padding-top: 1rem;
-  border-top: 1px solid #e8e8e8;
-}
-
-.pagination-info {
-  text-align: center;
-  font-size: 14px;
-  color: #666;
-}
-
-.pagination-controls {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.page-numbers {
-  display: flex;
-  gap: 0.25rem;
-}
-
-.page-btn {
-  padding: 0.4rem 0.75rem;
-  border: 1px solid #e0e0e0;
-  background-color: #fff;
-  color: #666;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 13px;
-  transition: all 0.2s;
-  min-width: 36px;
-}
-
-.page-btn:hover:not(:disabled) {
-  border-color: #667eea;
-  color: #667eea;
-}
-
-.page-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.page-btn.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-color: #667eea;
-  color: #fff;
-}
-
 .toast {
   position: fixed;
   bottom: 2rem;
@@ -1205,91 +1109,6 @@ export default {
 
 .toast-close:hover {
   color: #333;
-}
-
-.confirm-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10000;
-  animation: fadeIn 0.2s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.confirm-dialog {
-  background-color: #fff;
-  border-radius: 12px;
-  padding: 1.5rem;
-  width: 90%;
-  max-width: 360px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-  animation: scaleIn 0.2s ease;
-}
-
-@keyframes scaleIn {
-  from { transform: scale(0.9); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
-}
-
-.confirm-icon {
-  font-size: 2.5rem;
-  text-align: center;
-  margin-bottom: 1rem;
-}
-
-.confirm-message {
-  font-size: 15px;
-  color: #333;
-  text-align: center;
-  margin-bottom: 1.5rem;
-  line-height: 1.5;
-}
-
-.confirm-actions {
-  display: flex;
-  gap: 0.75rem;
-  justify-content: center;
-}
-
-.confirm-btn {
-  padding: 0.6rem 1.5rem;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.confirm-btn.cancel {
-  background-color: #f5f5f5;
-  color: #666;
-  border: 1px solid #ddd;
-}
-
-.confirm-btn.cancel:hover {
-  background-color: #e8e8e8;
-}
-
-.confirm-btn.confirm {
-  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-  color: #fff;
-  border: none;
-  box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
-}
-
-.confirm-btn.confirm:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4);
 }
 
 @media (max-width: 768px) {
