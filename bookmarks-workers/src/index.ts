@@ -24,7 +24,7 @@ app.use('*', cors({
 }))
 
 // Cache GET requests at edge for 60 seconds
-app.use('/bookmarks', async (c, next) => {
+app.use('/api/bookmarks', async (c, next) => {
   if (c.req.method === 'GET') {
     await next()
     if (c.res.status === 200) {
@@ -35,7 +35,7 @@ app.use('/bookmarks', async (c, next) => {
   }
 })
 
-app.use('/categories', async (c, next) => {
+app.use('/api/categories', async (c, next) => {
   if (c.req.method === 'GET') {
     await next()
     if (c.res.status === 200) {
@@ -48,8 +48,8 @@ app.use('/categories', async (c, next) => {
 
 app.get('/', (c) => c.json({ name: 'yaji-bookmarks', version: '1.0.0' }))
 
-app.route('/bookmarks', bookmarkRoutes)
-app.route('/categories', categoryRoutes)
-app.route('/url', urlRoutes)
+app.route('/api/bookmarks', bookmarkRoutes)
+app.route('/api/categories', categoryRoutes)
+app.route('/api/url', urlRoutes)
 
 export default app
