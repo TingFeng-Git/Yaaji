@@ -15,8 +15,8 @@ database_id = "47671840-7144-4958-ab80-16e88e847c1e"
 
 # 环境变量（生产环境通过 Cloudflare Dashboard 设置）
 [vars]
-ENVIRONMENT = "development"
-CORS_ORIGIN = "http://localhost:3000"
+ENVIRONMENT = "production"
+CORS_ORIGIN = "https://yaaji.pages.dev"
 
 # Durable Objects 配置
 [[durable_objects.bindings]]
