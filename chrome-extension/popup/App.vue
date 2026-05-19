@@ -81,7 +81,7 @@ import { useBookmarkStore } from '../shared/store/bookmarkStore.js'
 export default {
   name: 'PopupApp',
   setup() {
-    const { bookmarks, categories, bookmarkApi, categoryApi, loadFromStorage } = useBookmarkStore()
+    const { bookmarks, categories, bookmarkApi, loadFromStorage } = useBookmarkStore()
     
     const loading = ref(true)
     const saving = ref(false)

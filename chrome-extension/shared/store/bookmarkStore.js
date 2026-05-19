@@ -257,8 +257,3 @@ export function useBookmarkStore() {
     loadFromStorage
   }
 }
-
-export const sharedState = {
-  bookmarks: [],
-  categories: []
-}

@@ -27,12 +27,6 @@ export interface User {
 
 export interface Env {
   ENVIRONMENT: string
-  CORS_ORIGIN: string
   DB: D1Database
   IMPORT_TASKS: DurableObjectNamespace
-}
-
-export interface AuthContext {
-  userId: number
-  username: string
 }

@@ -366,18 +366,57 @@ export default {
       importedCount.value = 0
 
       try {
-        const response = await bookmarkApi.importBookmarks(file, (progressEvent) => {
-          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
-          uploadProgress.value = percentCompleted
-          importStatusText.value = '正在上传: ' + percentCompleted + '%'
-        })
+        const response = await bookmarkApi.importBookmarks(file)
 
         const data = response
         if (data.taskId) {
+          const taskId = data.taskId
           importStatus.value = 'parsing'
           importStatusText.value = '文件上传完成，等待解析...'
           uploadProgress.value = 100
-          pollImportProgress(data.taskId)
+
+          // 轮询导入进度
+          let pollCount = 0
+          const poll = async () => {
+            pollCount++
+            try {
+              const progress = await bookmarkApi.getImportProgress(taskId)
+              importStatus.value = progress.status || 'importing'
+              importProgress.value = progress.percent || 0
+              importStatusText.value = progress.message || getStatusText(progress.status)
+              importedCount.value = progress.current || 0
+
+              if (progress.status === 'completed') {
+                importProgress.value = 100
+                importStatus.value = 'completed'
+                importStatusText.value = progress.message || '导入完成'
+                importing.value = false
+                uploadProgress.value = 0
+                importProgress.value = 0
+                showToast(progress.message || '导入成功', 'success')
+                await fetchBookmarks()
+                await fetchCategories()
+                return
+              }
+
+              if (progress.status === 'failed') {
+                importing.value = false
+                importStatus.value = 'failed'
+                importStatusText.value = '导入失败: ' + (progress.message || '')
+                showToast('导入失败: ' + (progress.message || ''), 'error')
+                return
+              }
+
+              if (pollCount < 60) {
+                setTimeout(poll, 1000)
+              }
+            } catch {
+              if (pollCount < 60) {
+                setTimeout(poll, 1000)
+              }
+            }
+          }
+          poll()
         } else {
           importStatus.value = 'completed'
           importStatusText.value = '导入完成'
@@ -400,45 +439,6 @@ export default {
         showToast('导入失败: ' + (err.message || ''), 'error')
       }
       event.target.value = ''
-    }
-
-    const pollImportProgress = async (taskId) => {
-      const poll = async () => {
-        try {
-          const response = await bookmarkApi.getImportProgress(taskId)
-          const progress = response
-
-          importStatus.value = progress.status || 'importing'
-          importProgress.value = progress.percent || 0
-          importStatusText.value = progress.message || getStatusText(progress.status)
-          importedCount.value = progress.current || 0
-
-          if (progress.status === 'completed') {
-            importProgress.value = 100
-            importStatus.value = 'completed'
-            importStatusText.value = progress.message || '导入完成'
-            setTimeout(() => {
-              importing.value = false
-              uploadProgress.value = 0
-              importProgress.value = 0
-              showToast(progress.message || '导入成功', 'success')
-              fetchBookmarks()
-              fetchCategories()
-            }, 500)
-          } else if (progress.status === 'failed') {
-            importing.value = false
-            importStatus.value = 'failed'
-            importStatusText.value = '导入失败: ' + (progress.message || '')
-            showToast('导入失败: ' + (progress.message || ''), 'error')
-          } else {
-            setTimeout(poll, 1000)
-          }
-        } catch (err) {
-          logger.error('Poll progress error:', err)
-          setTimeout(poll, 1000)
-        }
-      }
-      poll()
     }
 
     const getStatusText = (status) => {
@@ -483,11 +483,6 @@ export default {
       if (hours < 24) return `${hours}小时前`
       if (days < 7) return `${days}天前`
       return date.toLocaleDateString()
-    }
-
-    const formatDate = (dateString) => {
-      const date = new Date(dateString)
-      return date.toLocaleString()
     }
 
     onMounted(() => {
@@ -537,7 +532,6 @@ export default {
       handleImport,
       handleExport,
       formatLastClicked,
-      formatDate,
       needsAnimation
     }
   }

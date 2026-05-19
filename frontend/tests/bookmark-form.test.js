@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
-import { nextTick } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import BookmarkForm from '../src/views/BookmarkForm.vue'
 import { sharedState } from '../src/store/sharedState'
@@ -15,9 +14,9 @@ vi.mock('../src/services/api', () => ({
     checkUrl: vi.fn(),
     create: vi.fn(),
     update: vi.fn(),
-    recordClick: vi.fn(),
+    click: vi.fn(),
     delete: vi.fn(),
-    deleteBatch: vi.fn(),
+    batchDelete: vi.fn(),
     importBookmarks: vi.fn(),
     getImportProgress: vi.fn(),
     exportBookmarks: vi.fn()
@@ -28,7 +27,7 @@ vi.mock('../src/services/api', () => ({
     create: vi.fn(),
     update: vi.fn(),
     delete: vi.fn(),
-    deleteBatch: vi.fn(),
+    batchDelete: vi.fn(),
     deleteEmpty: vi.fn()
   },
   urlApi: {

@@ -60,7 +60,7 @@ export default {
 
     const recordClick = async (id) => {
       try {
-        await bookmarkApi.recordClick(id)
+        await bookmarkApi.click(id)
         const bookmark = recentBookmarks.value.find(b => b.id === id)
         if (bookmark) {
           bookmark.lastClickedAt = new Date().toISOString()

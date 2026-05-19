@@ -134,7 +134,6 @@ export default {
     const showAddModal = ref(false)
     const showEditModal = ref(false)
     const form = ref({ id: null, name: '', color: '#667eea' })
-    const deleteTargetId = ref(null)
     const searchKeyword = ref('')
     const selectedCategories = ref([])
     const currentPage = ref(1)

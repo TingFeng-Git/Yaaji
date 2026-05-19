@@ -15,9 +15,9 @@ vi.mock('../src/services/api', () => ({
     checkUrl: vi.fn(),
     create: vi.fn(),
     update: vi.fn(),
-    recordClick: vi.fn(),
+    click: vi.fn(),
     delete: vi.fn(),
-    deleteBatch: vi.fn(),
+    batchDelete: vi.fn(),
     importBookmarks: vi.fn(),
     getImportProgress: vi.fn(),
     exportBookmarks: vi.fn()
@@ -28,7 +28,7 @@ vi.mock('../src/services/api', () => ({
     create: vi.fn(),
     update: vi.fn(),
     delete: vi.fn(),
-    deleteBatch: vi.fn(),
+    batchDelete: vi.fn(),
     deleteEmpty: vi.fn()
   },
   urlApi: {
@@ -250,7 +250,7 @@ describe('导入导出功能', () => {
     it('确认批量删除应调用API', async () => {
       sharedState.bookmarks = [...mockBookmarks]
       sharedState.categories = mockCategories
-      bookmarkApi.deleteBatch.mockResolvedValue(createMockResponse(null))
+      bookmarkApi.batchDelete.mockResolvedValue(createMockResponse(null))
       bookmarkApi.getAll.mockResolvedValue(createMockResponse([]))
       const wrapper = mountComponent()
       await flushPromises()
@@ -260,7 +260,7 @@ describe('导入导出功能', () => {
       await wrapper.find('.btn-delete-batch').trigger('click')
       await wrapper.find('.confirm-btn.confirm').trigger('click')
       await flushPromises()
-      expect(bookmarkApi.deleteBatch).toHaveBeenCalled()
+      expect(bookmarkApi.batchDelete).toHaveBeenCalled()
     })
   })
 

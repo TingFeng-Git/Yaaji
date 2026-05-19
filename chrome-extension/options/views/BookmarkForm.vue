@@ -71,7 +71,7 @@ export default {
   },
   emits: ['saved', 'cancel'],
   setup(props, { emit }) {
-    const { bookmarks, categories, bookmarkApi, categoryApi, urlApi, loadFromStorage } = useBookmarkStore()
+    const { bookmarks, categories, bookmarkApi, urlApi, loadFromStorage } = useBookmarkStore()
     
     const form = ref({
       title: '',

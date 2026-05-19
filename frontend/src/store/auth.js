@@ -1,4 +1,4 @@
-import { ref, reactive } from 'vue'
+import { reactive } from 'vue'
 
 const TOKEN_KEY = 'yaji_auth_token'
 const USER_KEY = 'yaji_auth_user'

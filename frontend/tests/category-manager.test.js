@@ -15,9 +15,9 @@ vi.mock('../src/services/api', () => ({
     checkUrl: vi.fn(),
     create: vi.fn(),
     update: vi.fn(),
-    recordClick: vi.fn(),
+    click: vi.fn(),
     delete: vi.fn(),
-    deleteBatch: vi.fn(),
+    batchDelete: vi.fn(),
     importBookmarks: vi.fn(),
     getImportProgress: vi.fn(),
     exportBookmarks: vi.fn()
@@ -28,7 +28,7 @@ vi.mock('../src/services/api', () => ({
     create: vi.fn(),
     update: vi.fn(),
     delete: vi.fn(),
-    deleteBatch: vi.fn(),
+    batchDelete: vi.fn(),
     deleteEmpty: vi.fn()
   },
   urlApi: {

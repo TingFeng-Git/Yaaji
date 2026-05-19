@@ -144,18 +144,9 @@ export const bookmarkApi = {
   },
 
   getProgress(taskId) {
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 5000)
     return fetch(`${API_BASE}/api/bookmarks/import/progress?taskId=${taskId}`, {
       headers: getHeaders(true),
-      signal: controller.signal,
-    }).then(response => {
-      clearTimeout(timeoutId)
-      return handleResponse(response)
-    }).catch(err => {
-      clearTimeout(timeoutId)
-      throw err
-    })
+    }).then(handleResponse)
   },
 
   getImportProgress(taskId) {

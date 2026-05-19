@@ -12,7 +12,6 @@
             <input
               type="text"
               v-model="searchKeyword"
-              @input="handleSearch"
               placeholder="搜索书签..."
               class="search-input"
             />
@@ -21,7 +20,6 @@
               :options="categories"
               placeholder="全部分类"
               :searchable-threshold="5"
-              @update:modelValue="handleSearch"
             />
           </div>
         </div>
@@ -67,9 +65,6 @@ export default {
     const isAuthenticated = computed(() => authState.isAuthenticated)
     const user = computed(() => authState.user)
 
-    const handleSearch = () => {
-    }
-
     const fetchCategories = async () => {
       try {
         const response = await categoryApi.getAll()
@@ -99,7 +94,6 @@ export default {
       searchKeyword,
       searchCategoryId,
       categories: computed(() => sharedState.categories),
-      handleSearch,
       isAuthenticated,
       user,
       handleLogout

@@ -1,7 +1,6 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
-import { jwt } from 'hono/jwt'
 import { bookmarkRoutes } from './routes/bookmarks'
 import { categoryRoutes } from './routes/categories'
 import { urlRoutes } from './routes/url'

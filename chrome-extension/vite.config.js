@@ -13,8 +13,7 @@ export default defineConfig({
       input: {
         popup: resolve(__dirname, 'popup/index.html'),
         options: resolve(__dirname, 'options/index.html'),
-        background: resolve(__dirname, 'background/service-worker.js'),
-        manifest: resolve(__dirname, 'public/manifest.json')
+        background: resolve(__dirname, 'background/service-worker.js')
       },
       output: {
         entryFileNames: (chunkInfo) => {
@@ -25,8 +24,6 @@ export default defineConfig({
         },
         chunkFileNames: 'assets/[name].js',
         assetFileNames: (assetInfo) => {
-          const info = assetInfo.name.split('.')
-          const ext = info[info.length - 1]
           if (/\.(png|jpe?g|gif|svg|ico)$/i.test(assetInfo.name)) {
             return 'icons/[name][extname]'
           }

@@ -16,17 +16,6 @@ const TOKEN_EXPIRY = '7d'
 
 // 密码哈希（本地开发用简单哈希，生产应使用 bcrypt/argon2）
 function hashPassword(password: string): string {
-  // 使用 HMAC-SHA256 + salt
-  const encoder = new TextEncoder()
-  const keyMaterial = crypto.subtle.importKey(
-    'raw',
-    encoder.encode(password + JWT_SECRET),
-    'HKDF',
-    false,
-    ['deriveBits']
-  )
-  // 简化版：使用 base64 编码的密码作为"哈希"
-  // 生产环境应使用 @node-rs/argon2 或 bcrypt
   return btoa(password + ':' + JWT_SECRET.slice(0, 16))
 }
 
@@ -167,4 +156,4 @@ authRoutes.get('/me', async (c) => {
   }
 })
 
-export { authRoutes, JWT_SECRET }
+export { authRoutes }

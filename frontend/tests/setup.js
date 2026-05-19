@@ -1,5 +1,4 @@
 import { vi } from 'vitest'
-import { config } from '@vue/test-utils'
 
 vi.mock('axios', () => {
   const mockAxios = {

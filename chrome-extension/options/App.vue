@@ -64,7 +64,7 @@ export default {
     BookmarkForm
   },
   setup() {
-    const { categories, categoryApi, loadFromStorage } = useBookmarkStore()
+    const { categories, loadFromStorage } = useBookmarkStore()
     const searchKeyword = ref('')
     const searchCategoryId = ref(null)
     const currentView = ref('list')
@@ -86,8 +86,8 @@ export default {
       editId.value = null
     }
 
-    onMounted(() => {
-      loadFromStorage()
+    onMounted(async () => {
+      await loadFromStorage()
     })
 
     return {

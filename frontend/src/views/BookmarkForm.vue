@@ -85,7 +85,6 @@ export default {
     const fetchingTitle = ref(false)
     const titleHint = ref('')
     const urlExists = ref(false)
-    const existingBookmark = ref(null)
 
     const toast = ref({
       show: false,
@@ -101,7 +100,6 @@ export default {
         categoryId: null
       }
       urlExists.value = false
-      existingBookmark.value = null
       titleHint.value = ''
       error.value = null
     }
@@ -145,13 +143,11 @@ export default {
     const checkUrlExists = async (url) => {
       if (!url || isEdit.value) {
         urlExists.value = false
-        existingBookmark.value = null
         return
       }
       try {
         const response = await bookmarkApi.checkUrl(url)
         urlExists.value = response.exists
-        existingBookmark.value = response.bookmark || null
       } catch (err) {
         logger.error('检查URL失败', err)
       }
@@ -268,7 +264,6 @@ export default {
       fetchingTitle,
       titleHint,
       urlExists,
-      existingBookmark,
       toast,
       resetForm,
       handleUrlBlur,
