@@ -79,10 +79,13 @@ export const authApi = {
 
 export const bookmarkApi = {
   getAll(categoryId = null) {
-    const url = categoryId
-      ? `${API_BASE}/api/bookmarks?categoryId=${categoryId}`
-      : `${API_BASE}/api/bookmarks`
-    return fetch(url, { headers: getHeaders(true) }).then(handleResponse)
+    let url = `${API_BASE}/api/bookmarks`
+    const params = []
+    if (categoryId) params.push(`categoryId=${categoryId}`)
+    params.push(`_t=${Date.now()}`)
+    return fetch(`${url}?${params.join('&')}`, {
+      headers: getHeaders(true),
+    }).then(handleResponse)
   },
 
   getById(id) {
