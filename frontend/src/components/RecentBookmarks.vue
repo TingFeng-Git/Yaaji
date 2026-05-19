@@ -47,7 +47,7 @@ export default {
     const fetchRecentBookmarks = async () => {
       try {
         const response = await bookmarkApi.getRecent(3)
-        recentBookmarks.value = response.data
+        recentBookmarks.value = response
       } catch (err) {
         logger.error('获取最近访问书签失败', err)
       }

@@ -32,13 +32,7 @@ document.createElement = (tag) => {
   return el
 }
 
-export const createMockResponse = (data, status = 200) => ({
-  data,
-  status,
-  statusText: 'OK',
-  headers: {},
-  config: {}
-})
+export const createMockResponse = (data) => data
 
 export const createMockError = (message, status = 500) => {
   const error = new Error(message)

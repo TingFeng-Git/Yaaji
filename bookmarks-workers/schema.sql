@@ -1,5 +1,33 @@
 PRAGMA foreign_keys = ON;
 
+-- Users table
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
+
+-- Sessions table (for token blacklisting / force logout)
+CREATE TABLE IF NOT EXISTS sessions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    token TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token);
+CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
+
+-- Add user_id to bookmarks and categories for data isolation
+ALTER TABLE bookmarks ADD COLUMN user_id INTEGER;
+ALTER TABLE categories ADD COLUMN user_id INTEGER;
+CREATE INDEX IF NOT EXISTS idx_bookmarks_user_id ON bookmarks(user_id);
+CREATE INDEX IF NOT EXISTS idx_categories_user_id ON categories(user_id);
+
 CREATE TABLE IF NOT EXISTS categories (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
@@ -16,8 +44,7 @@ CREATE TABLE IF NOT EXISTS bookmarks (
     click_count INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now')),
-    last_clicked_at TEXT,
-    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
+    last_clicked_at TEXT
 );
 
 CREATE INDEX IF NOT EXISTS idx_bookmarks_category_id ON bookmarks(category_id);

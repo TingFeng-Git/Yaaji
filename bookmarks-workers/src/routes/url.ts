@@ -1,6 +1,13 @@
 import { Hono } from 'hono'
+import { cors } from 'hono/cors'
 
 export const urlRoutes = new Hono()
+
+urlRoutes.use('*', cors({
+  origin: '*',
+  allowMethods: ['GET', 'HEAD', 'PUT', 'POST', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowHeaders: ['Content-Type', 'Authorization'],
+}))
 
 const TIMEOUT = 5000
 const MAX_CONTENT_LENGTH = 1024 * 1024

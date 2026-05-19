@@ -1,8 +1,10 @@
 import { DurableObject } from 'cloudflare:workers'
+import * as cheerio from 'cheerio'
+import type { Element } from 'domhandler'
 import type { Env } from '../types'
 
 export interface ImportTaskState {
-  status: 'pending' | 'processing' | 'completed' | 'failed'
+  status: 'pending' | 'parsing' | 'importing' | 'completed' | 'failed'
   current: number
   total: number
   message: string
@@ -16,6 +18,7 @@ export interface ImportTaskState {
 export interface ImportRequest {
   html: string
   taskId: string
+  userId: number
 }
 
 interface ParsedBookmark {
@@ -27,10 +30,14 @@ interface ParsedBookmark {
 
 export class ImportTaskDO extends DurableObject {
   private db: D1Database
+  private taskId: string | null
+  private userId: number | null
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env)
     this.db = env.DB
+    this.taskId = null
+    this.userId = null
   }
 
   async fetch(request: Request): Promise<Response> {
@@ -38,45 +45,50 @@ export class ImportTaskDO extends DurableObject {
 
     if (request.method === 'POST' && url.pathname === '/start') {
       const body = await request.json<ImportRequest>()
-      await this.startImport(body)
+      this.taskId = body.taskId
+      this.userId = body.userId
+      this.ctx.waitUntil(this.startImport(body))
       return Response.json({ success: true, taskId: body.taskId })
     }
 
     if (request.method === 'GET' && url.pathname === '/progress') {
-      const progress = await this.getProgress()
-      return Response.json(progress)
+      const state = await this.ctx.storage.get<ImportTaskState>('task')
+      if (!state) return Response.json(null, { status: 404 })
+      return Response.json(state)
     }
 
     return Response.json({ error: 'Not found' }, { status: 404 })
   }
 
   private async startImport(request: ImportRequest): Promise<void> {
-    const { html } = request
-
-    await this.updateState({
-      status: 'processing',
+    const state: ImportTaskState = {
+      status: 'parsing',
       current: 0,
       total: 0,
       message: '正在解析HTML...',
       importedCount: 0,
+      errorMessage: undefined,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-    })
+    }
+    await this.updateState(state)
+    await this.flushToD1(state)
 
     try {
-      const bookmarks = this.parseHtml(html)
+      const bookmarks = this.parseHtml(request.html)
       const total = bookmarks.length
 
-      await this.updateState({
-        status: 'processing',
-        current: 10,
-        total,
-        message: `发现 ${total} 个链接，准备导入...`,
-        importedCount: 0,
-      })
+      state.status = 'parsing'
+      state.current = 0
+      state.total = total
+      state.message = `发现 ${total} 个链接，准备导入...`
+      state.updatedAt = new Date().toISOString()
+      await this.updateState(state)
+      await this.flushToD1(state)
 
       const categoryCache = new Map<string, number>()
       let importedCount = 0
+      let lastFlush = 0
 
       for (let i = 0; i < bookmarks.length; i++) {
         const bookmark = bookmarks[i]
@@ -87,16 +99,16 @@ export class ImportTaskDO extends DurableObject {
             categoryId = categoryCache.get(bookmark.categoryName)!
           } else {
             const existing = await this.db
-              .prepare('SELECT id FROM categories WHERE name = ?')
-              .bind(bookmark.categoryName)
+              .prepare('SELECT id FROM categories WHERE name = ? AND user_id = ?')
+              .bind(bookmark.categoryName, this.userId)
               .first<{ id: number }>()
 
             if (existing) {
               categoryId = existing.id
             } else {
               const result = await this.db
-                .prepare('INSERT INTO categories (name, created_at) VALUES (?, ?)')
-                .bind(bookmark.categoryName, new Date().toISOString())
+                .prepare('INSERT INTO categories (name, user_id, created_at) VALUES (?, ?, ?)')
+                .bind(bookmark.categoryName, this.userId, new Date().toISOString())
                 .run()
               categoryId = result.meta.last_row_id as number
             }
@@ -107,13 +119,14 @@ export class ImportTaskDO extends DurableObject {
         try {
           await this.db
             .prepare(
-              'INSERT OR IGNORE INTO bookmarks (title, url, description, category_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)'
+              'INSERT OR IGNORE INTO bookmarks (title, url, description, category_id, user_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
             )
             .bind(
               bookmark.title,
               bookmark.url,
               bookmark.description || null,
               categoryId,
+              this.userId,
               new Date().toISOString(),
               new Date().toISOString()
             )
@@ -123,115 +136,130 @@ export class ImportTaskDO extends DurableObject {
           console.error('跳过重复或无效书签:', bookmark.title, err instanceof Error ? err.message : String(err))
         }
 
-        const progress = 10 + Math.floor(((i + 1) / total) * 85)
-        await this.updateState({
-          status: 'processing',
-          current: Math.min(progress, 95),
-          total,
-          message: `正在导入: ${i + 1}/${total}`,
-          importedCount,
-        })
+        state.status = i === 0 ? 'importing' : state.status
+        state.current = importedCount
+        state.total = total
+        state.message = `正在导入: ${i + 1}/${total}`
+        state.importedCount = importedCount
+        state.updatedAt = new Date().toISOString()
+
+        const now = Date.now()
+        if (now - lastFlush >= 2000) {
+          await this.updateState(state)
+          await this.flushToD1(state)
+          lastFlush = now
+        }
       }
 
+      await this.updateState(state)
+      await this.flushToD1(state)
+
       const now = new Date().toISOString()
-      await this.updateState({
-        status: 'completed',
-        current: 100,
-        total,
-        message: `成功导入 ${importedCount} 个书签`,
-        importedCount,
-        completedAt: now,
-        updatedAt: now,
-      })
+      state.status = 'completed'
+      state.message = `成功导入 ${importedCount} 个书签`
+      state.completedAt = now
+      state.updatedAt = now
+      await this.updateState(state)
+      await this.flushToD1(state)
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err)
-      await this.updateState({
-        status: 'failed',
-        current: 0,
-        total: 0,
-        message: '导入失败',
-        importedCount: 0,
-        errorMessage,
-        updatedAt: new Date().toISOString(),
-      })
+      state.status = 'failed'
+      state.message = '导入失败'
+      state.errorMessage = errorMessage
+      state.updatedAt = new Date().toISOString()
+      await this.updateState(state)
+      await this.flushToD1(state)
     }
+  }
+
+  private async updateState(state: ImportTaskState): Promise<void> {
+    await this.ctx.storage.put('task', state)
+  }
+
+  private async flushToD1(state: ImportTaskState): Promise<void> {
+    await this.db
+      .prepare(
+        `INSERT INTO import_tasks (id, status, current, total, message, imported_count, error_message, created_at, updated_at, completed_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT(id) DO UPDATE SET
+           status = excluded.status,
+           current = excluded.current,
+           total = excluded.total,
+           message = excluded.message,
+           imported_count = excluded.imported_count,
+           error_message = excluded.error_message,
+           updated_at = excluded.updated_at,
+           completed_at = excluded.completed_at`
+      )
+      .bind(
+        this.taskId,
+        state.status,
+        state.current,
+        state.total,
+        state.message,
+        state.importedCount,
+        state.errorMessage || null,
+        state.createdAt,
+        state.updatedAt,
+        state.completedAt || null,
+      )
+      .run()
   }
 
   private parseHtml(html: string): ParsedBookmark[] {
     const bookmarks: ParsedBookmark[] = []
+    const $ = cheerio.load(html)
 
-    const dlBlockPattern = /<DT><H3[^>]*>(.*?)<\/H3>\s*<DL><p>([\s\S]*?)<\/DL><p>/gi
-    let dlMatch: RegExpExecArray | null
-
-    const topLevelLinks = this.extractLinks(html)
-    bookmarks.push(...topLevelLinks)
-
-    while ((dlMatch = dlBlockPattern.exec(html)) !== null) {
-      const categoryName = this.cleanHtml(dlMatch[1])
-      const blockContent = dlMatch[2]
-      const links = this.extractLinks(blockContent, categoryName)
-      bookmarks.push(...links)
-    }
-
-    if (bookmarks.length === 0) {
-      const linkPattern = /<A\s+HREF="([^"]*)"[^>]*>(.*?)<\/A>/gi
-      let linkMatch: RegExpExecArray | null
-      while ((linkMatch = linkPattern.exec(html)) !== null) {
-        const url = linkMatch[1]
-        const title = this.cleanHtml(linkMatch[2])
+    const firstDl = $('dl').first()
+    if (firstDl.length > 0) {
+      this.parseDlBlock($, firstDl, null, bookmarks)
+    } else {
+      $('a').each((_, el) => {
+        const $el = $(el)
+        const url = $el.attr('href')
+        const title = $el.text().trim()
         if (url && title && !url.startsWith('javascript:')) {
           bookmarks.push({ title, url })
         }
-      }
+      })
     }
 
     return bookmarks
   }
 
-  private extractLinks(html: string, categoryName?: string): ParsedBookmark[] {
-    const links: ParsedBookmark[] = []
-    const linkPattern = /<DT><A\s+HREF="([^"]*)"[^>]*>(.*?)<\/A>/gi
-    let match: RegExpExecArray | null
+  private parseDlBlock(
+    $: cheerio.CheerioAPI,
+    dl: cheerio.Cheerio<Element>,
+    parentCategoryName: string | null,
+    result: ParsedBookmark[]
+  ): void {
+    dl.children().each((_, child) => {
+      const tagName = child.tagName?.toLowerCase()
+      if (!tagName) return
 
-    while ((match = linkPattern.exec(html)) !== null) {
-      const url = match[1]
-      const title = this.cleanHtml(match[2])
-      if (url && title && !url.startsWith('javascript:')) {
-        links.push({ title, url, categoryName })
+      if (tagName === 'dt') {
+        const $child = $(child)
+        const h3 = $child.find('h3').first()
+        const a = $child.find('a').first()
+
+        if (h3.length > 0) {
+          const categoryName = h3.text().trim()
+          if (!categoryName) return
+
+          const childDl = $child.find('dl').first()
+          if (childDl.length > 0) {
+            this.parseDlBlock($, childDl, categoryName, result)
+          }
+        } else if (a.length > 0) {
+          const url = a.attr('href')
+          const title = a.text().trim()
+          if (url && title && !url.startsWith('javascript:')) {
+            result.push({ title, url, categoryName: parentCategoryName || undefined })
+          }
+        }
+      } else if (tagName === 'p') {
+        this.parseDlBlock($, $(child), parentCategoryName, result)
       }
-    }
-
-    return links
-  }
-
-  private cleanHtml(text: string): string {
-    return text
-      .replace(/<[^>]+>/g, '')
-      .replace(/&amp;/g, '&')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'")
-      .trim()
-  }
-
-  private async updateState(partial: Partial<ImportTaskState>): Promise<void> {
-    const current = await this.ctx.storage.get<ImportTaskState>('task')
-    const updated: ImportTaskState = {
-      status: 'pending',
-      current: 0,
-      total: 0,
-      message: '',
-      importedCount: 0,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      ...current,
-      ...partial,
-    }
-    await this.ctx.storage.put('task', updated)
-  }
-
-  async getProgress(): Promise<ImportTaskState | null> {
-    return (await this.ctx.storage.get<ImportTaskState>('task')) ?? null
+    })
   }
 }

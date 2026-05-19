@@ -97,35 +97,91 @@ class MockD1PreparedStatement {
       rows = rows.filter(row => !bookmarks.data.some(b => b.category_id === row.id))
     }
 
+    // ORDER BY col DESC/ASC
+    const orderMatch = this.sql.match(/ORDER\s+BY\s+(\w+)(?:\s+(ASC|DESC))?/i)
+    if (orderMatch) {
+      const col = orderMatch[1]
+      const dir = (orderMatch[2] || 'ASC').toUpperCase()
+      rows.sort((a, b) => {
+        const aVal = a[col] as any
+        const bVal = b[col] as any
+        if (aVal == null && bVal == null) return 0
+        if (aVal == null) return 1
+        if (bVal == null) return -1
+        if (dir === 'DESC') return aVal < bVal ? 1 : aVal > bVal ? -1 : 0
+        return aVal < bVal ? -1 : aVal > bVal ? 1 : 0
+      })
+    }
+
+    // LIMIT ?
+    const limitMatch = this.sql.match(/LIMIT\s+\?/i)
+    if (limitMatch) {
+      // Find the param after WHERE params
+      const whereClause = this.sql.match(/WHERE\s+(.+?)(?:ORDER|LIMIT|$)/i)
+      let paramIdx = 0
+      if (whereClause) {
+        const placeholderCount = (whereClause[1].match(/\?/g) || []).length
+        paramIdx = placeholderCount
+      }
+      if (paramIdx < this.params.length) {
+        const limit = Number(this.params[paramIdx])
+        rows = rows.slice(0, limit)
+      }
+    }
+
     return rows
   }
 
   private applyWhere(rows: MockRow[], clause: string): MockRow[] {
-    const eqMatch = clause.match(/(\w+)\s*=\s*\?/)
-    if (eqMatch) {
-      const col = eqMatch[1]
-      const val = this.params[0]
-      return rows.filter(row => row[col] === val || row[col] === Number(val))
+    let result = rows
+    let paramIdx = 0
+
+    // Split on AND, handle each condition
+    const conditions = clause.split(/\s+AND\s+/i)
+
+    for (const cond of conditions) {
+      const trimmed = cond.trim()
+
+      // IS NOT NULL
+      const notNullMatch = trimmed.match(/(\w+)\s+IS\s+NOT\s+NULL/i)
+      if (notNullMatch) {
+        result = result.filter(row => row[notNullMatch[1]] != null)
+        continue
+      }
+
+      // IS NULL
+      const nullMatch = trimmed.match(/(\w+)\s+IS\s+NULL/i)
+      if (nullMatch) {
+        result = result.filter(row => row[nullMatch[1]] == null)
+        continue
+      }
+
+      // col = ?
+      const eqMatch = trimmed.match(/(\w+)\s*=\s*\?/)
+      if (eqMatch && paramIdx < this.params.length) {
+        const col = eqMatch[1]
+        const val = this.params[paramIdx]
+        paramIdx++
+        result = result.filter(row => row[col] === val || row[col] === Number(val))
+        continue
+      }
+
+      // col IN (?, ?, ...)
+      const inMatch = trimmed.match(/(\w+)\s+IN\s*\(([^)]+)\)/i)
+      if (inMatch) {
+        const col = inMatch[1]
+        const placeholders = inMatch[2].split(',').length
+        const values: unknown[] = []
+        for (let i = 0; i < placeholders && paramIdx < this.params.length; i++) {
+          values.push(Number(this.params[paramIdx]))
+          paramIdx++
+        }
+        result = result.filter(row => values.includes(row[col] as number))
+        continue
+      }
     }
 
-    if (clause.includes('IS NOT NULL')) {
-      const colMatch = clause.match(/(\w+)\s+IS\s+NOT\s+NULL/i)
-      if (colMatch) return rows.filter(row => row[colMatch[1]] != null)
-    }
-
-    if (clause.includes('IS NULL')) {
-      const colMatch = clause.match(/(\w+)\s+IS\s+NULL/i)
-      if (colMatch) return rows.filter(row => row[colMatch[1]] == null)
-    }
-
-    const inMatch = clause.match(/(\w+)\s+IN\s*\(([^)]+)\)/i)
-    if (inMatch) {
-      const col = inMatch[1]
-      const values = this.params.map(v => Number(v))
-      return rows.filter(row => values.includes(row[col] as number))
-    }
-
-    return rows
+    return result
   }
 
   private execInsert(): { success: boolean; meta: { changes: number; last_row_id: number } } {
@@ -215,20 +271,34 @@ class MockD1PreparedStatement {
       return { success: true, meta: { changes: before - table.data.length, last_row_id: 0 } }
     }
 
-    const whereInParam = this.sql.match(/WHERE\s+(\w+)\s+IN\s*\(\s*\?/i)
-    if (whereInParam) {
-      const col = whereInParam[1]
-      const values = this.params.map(v => Number(v))
-      table.data = table.data.filter(row => !values.includes(row[col] as number))
-      return { success: true, meta: { changes: before - table.data.length, last_row_id: 0 } }
-    }
-
+    // Check subquery first (must come before simple IN check)
     const whereInSubquery = this.sql.match(/WHERE\s+(\w+)\s+IN\s*\(\s*SELECT/i)
     if (whereInSubquery) {
       const col = whereInSubquery[1]
       const idsToDelete = this.execSubquery()
       table.data = table.data.filter(row => !idsToDelete.includes(row[col] as number))
       return { success: true, meta: { changes: before - table.data.length, last_row_id: 0 } }
+    }
+
+    const whereInParam = this.sql.match(/WHERE\s+(\w+)\s+IN\s*\(([^)]+)\)(?:\s+AND\s+(\w+)\s*=\s*\?)?/i)
+    if (whereInParam) {
+      const col = whereInParam[1]
+      const placeholderCount = whereInParam[2].split(',').length
+      const values: number[] = []
+      for (let i = 0; i < placeholderCount; i++) {
+        values.push(Number(this.params[i]))
+      }
+      let filtered = table.data.filter(row => values.includes(row[col] as number))
+      // Handle additional AND condition
+      if (whereInParam[3]) {
+        const andCol = whereInParam[3]
+        const andVal = this.params[placeholderCount]
+        filtered = filtered.filter(row => row[andCol] === andVal || row[andCol] === Number(andVal))
+      }
+      const changes = filtered.length
+      const idsToRemove = new Set(filtered.map(r => r.id))
+      table.data = table.data.filter(row => !idsToRemove.has(row.id))
+      return { success: true, meta: { changes, last_row_id: 0 } }
     }
 
     return { success: true, meta: { changes: 0, last_row_id: 0 } }
@@ -238,8 +308,16 @@ class MockD1PreparedStatement {
     if (this.sql.includes('LEFT JOIN') && this.sql.includes('b.id IS NULL')) {
       const categories = this.getTableData('categories')
       const bookmarks = this.getTableData('bookmarks')
+      // Check if there's a user_id filter in the JOIN or WHERE clause
+      const userIdParam = this.params.length > 0 ? Number(this.params[0]) : null
       return categories.data
-        .filter(cat => !bookmarks.data.some(b => b.category_id === cat.id))
+        .filter(cat => {
+          // If user_id filter exists, only match bookmarks with same user_id
+          const matchingBookmarks = userIdParam != null
+            ? bookmarks.data.filter(b => b.category_id === cat.id && b.user_id === userIdParam)
+            : bookmarks.data.filter(b => b.category_id === cat.id)
+          return matchingBookmarks.length === 0
+        })
         .map(cat => cat.id as number)
     }
     return []
@@ -272,4 +350,34 @@ export class MockD1Database {
 
 export function createMockDB(): MockD1Database {
   return new MockD1Database()
+}
+
+const JWT_SECRET = 'yaji-bookmarks-jwt-secret-change-in-production'
+
+async function getCryptoKey(): Promise<CryptoKey> {
+  const encoder = new TextEncoder()
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(JWT_SECRET),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  )
+  return keyMaterial
+}
+
+export async function createTestToken(payload: Record<string, unknown>): Promise<string> {
+  const header = { alg: 'HS256', typ: 'JWT' }
+  const now = Math.floor(Date.now() / 1000)
+  const fullPayload = { ...payload, iat: now, exp: now + 86400 * 7 }
+
+  const headerB64 = btoa(JSON.stringify(header)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_')
+  const payloadB64 = btoa(JSON.stringify(fullPayload)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_')
+
+  const key = await getCryptoKey()
+  const signingInput = `${headerB64}.${payloadB64}`
+  const signature = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(signingInput))
+  const sigB64 = btoa(String.fromCharCode(...new Uint8Array(signature))).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_')
+
+  return `${signingInput}.${sigB64}`
 }

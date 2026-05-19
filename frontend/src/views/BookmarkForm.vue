@@ -121,7 +121,7 @@ export default {
         error.value = null
         try {
           const response = await bookmarkApi.getById(props.id)
-          form.value = response.data
+          form.value = response
         } catch (err) {
           error.value = '获取书签信息失败'
           logger.error(err)
@@ -135,7 +135,7 @@ export default {
       if (sharedState.categories.length === 0) {
         try {
           const response = await categoryApi.getAll()
-          sharedState.categories = response.data
+          sharedState.categories = response
         } catch (err) {
           logger.error('获取分类失败', err)
         }
@@ -150,8 +150,8 @@ export default {
       }
       try {
         const response = await bookmarkApi.checkUrl(url)
-        urlExists.value = response.data.exists
-        existingBookmark.value = response.data.bookmark || null
+        urlExists.value = response.exists
+        existingBookmark.value = response.bookmark || null
       } catch (err) {
         logger.error('检查URL失败', err)
       }
@@ -184,8 +184,8 @@ export default {
       titleHint.value = '正在获取网站标题...'
       try {
         const response = await urlApi.getTitle(url)
-        if (response.data.title && response.data.title.trim() !== '') {
-          form.value.title = response.data.title
+        if (response.title && response.title.trim() !== '') {
+          form.value.title = response.title
           titleHint.value = '已自动获取标题'
         } else {
           titleHint.value = '未能获取标题，请手动输入'
@@ -206,7 +206,7 @@ export default {
         // 直接调用后端API检查URL是否存在，不依赖前端缓存
         try {
           const response = await bookmarkApi.checkUrl(form.value.url)
-          if (response.data.exists) {
+          if (response.exists) {
             showToast('该网址已存在，无法重复添加', 'error')
             return
           }
@@ -234,7 +234,7 @@ export default {
           }
         } else {
           const result = await bookmarkApi.create(data)
-          sharedState.bookmarks.unshift(result.data)
+          sharedState.bookmarks.unshift(result)
         }
         router.push('/')
       } catch (err) {

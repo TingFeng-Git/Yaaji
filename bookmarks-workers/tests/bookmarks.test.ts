@@ -1,9 +1,14 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import app from '../src/index'
-import { createMockDB, MockD1Database } from './helpers/mock-db'
+import { createMockDB, MockD1Database, createTestToken } from './helpers/mock-db'
 
 function env(db: MockD1Database) {
   return { DB: db as unknown as D1Database, ENVIRONMENT: 'test', CORS_ORIGIN: '*' }
+}
+
+async function authHeaders() {
+  const token = await createTestToken({ userId: 1, username: 'testuser' })
+  return { Authorization: `Bearer ${token}` }
 }
 
 describe('Bookmark API', () => {
@@ -15,7 +20,7 @@ describe('Bookmark API', () => {
 
   describe('GET /api/bookmarks', () => {
     it('should return empty array when no bookmarks exist', async () => {
-      const res = await app.request('/api/bookmarks', {}, env(db))
+      const res = await app.request('/api/bookmarks', { headers: await authHeaders() }, env(db))
       expect(res.status).toBe(200)
       const data = await res.json()
       expect(Array.isArray(data)).toBe(true)
@@ -24,11 +29,11 @@ describe('Bookmark API', () => {
 
     it('should return all bookmarks', async () => {
       db.seed('bookmarks', [
-        { id: 1, title: 'Test 1', url: 'https://a.com', description: '', category_id: null, click_count: 0, created_at: '2024-01-01', updated_at: '2024-01-01', last_clicked_at: null },
-        { id: 2, title: 'Test 2', url: 'https://b.com', description: '', category_id: null, click_count: 0, created_at: '2024-01-02', updated_at: '2024-01-02', last_clicked_at: null },
+        { id: 1, title: 'Test 1', url: 'https://a.com', description: '', category_id: null, click_count: 0, created_at: '2024-01-01', updated_at: '2024-01-01', last_clicked_at: null, user_id: 1 },
+        { id: 2, title: 'Test 2', url: 'https://b.com', description: '', category_id: null, click_count: 0, created_at: '2024-01-02', updated_at: '2024-01-02', last_clicked_at: null, user_id: 1 },
       ])
 
-      const res = await app.request('/api/bookmarks', {}, env(db))
+      const res = await app.request('/api/bookmarks', { headers: await authHeaders() }, env(db))
       expect(res.status).toBe(200)
       const data = await res.json()
       expect(data).toHaveLength(2)
@@ -36,11 +41,11 @@ describe('Bookmark API', () => {
 
     it('should filter by categoryId', async () => {
       db.seed('bookmarks', [
-        { id: 1, title: 'Cat 1', url: 'https://a.com', description: '', category_id: 1, click_count: 0, created_at: '2024-01-01', updated_at: '2024-01-01', last_clicked_at: null },
-        { id: 2, title: 'Cat 2', url: 'https://b.com', description: '', category_id: 2, click_count: 0, created_at: '2024-01-02', updated_at: '2024-01-02', last_clicked_at: null },
+        { id: 1, title: 'Cat 1', url: 'https://a.com', description: '', category_id: 1, click_count: 0, created_at: '2024-01-01', updated_at: '2024-01-01', last_clicked_at: null, user_id: 1 },
+        { id: 2, title: 'Cat 2', url: 'https://b.com', description: '', category_id: 2, click_count: 0, created_at: '2024-01-02', updated_at: '2024-01-02', last_clicked_at: null, user_id: 1 },
       ])
 
-      const res = await app.request('/api/bookmarks?categoryId=1', {}, env(db))
+      const res = await app.request('/api/bookmarks?categoryId=1', { headers: await authHeaders() }, env(db))
       expect(res.status).toBe(200)
       const data = await res.json()
       expect(data).toHaveLength(1)
@@ -51,11 +56,11 @@ describe('Bookmark API', () => {
   describe('GET /api/bookmarks/recent', () => {
     it('should return recently clicked bookmarks', async () => {
       db.seed('bookmarks', [
-        { id: 1, title: 'Recent', url: 'https://a.com', description: '', category_id: null, click_count: 5, created_at: '2024-01-01', updated_at: '2024-01-01', last_clicked_at: '2024-06-01' },
-        { id: 2, title: 'Old', url: 'https://b.com', description: '', category_id: null, click_count: 0, created_at: '2024-01-02', updated_at: '2024-01-02', last_clicked_at: null },
+        { id: 1, title: 'Recent', url: 'https://a.com', description: '', category_id: null, click_count: 5, created_at: '2024-01-01', updated_at: '2024-01-01', last_clicked_at: '2024-06-01', user_id: 1 },
+        { id: 2, title: 'Old', url: 'https://b.com', description: '', category_id: null, click_count: 0, created_at: '2024-01-02', updated_at: '2024-01-02', last_clicked_at: null, user_id: 1 },
       ])
 
-      const res = await app.request('/api/bookmarks/recent', {}, env(db))
+      const res = await app.request('/api/bookmarks/recent', { headers: await authHeaders() }, env(db))
       expect(res.status).toBe(200)
       const data = await res.json()
       expect(data).toHaveLength(1)
@@ -65,7 +70,7 @@ describe('Bookmark API', () => {
 
   describe('GET /api/bookmarks/check-url', () => {
     it('should return exists: false for unknown URL', async () => {
-      const res = await app.request('/api/bookmarks/check-url?url=https://unknown.com', {}, env(db))
+      const res = await app.request('/api/bookmarks/check-url?url=https://unknown.com', { headers: await authHeaders() }, env(db))
       expect(res.status).toBe(200)
       const data = await res.json()
       expect(data.exists).toBe(false)
@@ -74,10 +79,10 @@ describe('Bookmark API', () => {
 
     it('should return exists: true for known URL', async () => {
       db.seed('bookmarks', [
-        { id: 1, title: 'Known', url: 'https://known.com', description: '', category_id: null, click_count: 0, created_at: '2024-01-01', updated_at: '2024-01-01', last_clicked_at: null },
+        { id: 1, title: 'Known', url: 'https://known.com', description: '', category_id: null, click_count: 0, created_at: '2024-01-01', updated_at: '2024-01-01', last_clicked_at: null, user_id: 1 },
       ])
 
-      const res = await app.request('/api/bookmarks/check-url?url=https://known.com', {}, env(db))
+      const res = await app.request('/api/bookmarks/check-url?url=https://known.com', { headers: await authHeaders() }, env(db))
       expect(res.status).toBe(200)
       const data = await res.json()
       expect(data.exists).toBe(true)
@@ -85,7 +90,7 @@ describe('Bookmark API', () => {
     })
 
     it('should return exists: false when no url param', async () => {
-      const res = await app.request('/api/bookmarks/check-url', {}, env(db))
+      const res = await app.request('/api/bookmarks/check-url', { headers: await authHeaders() }, env(db))
       expect(res.status).toBe(200)
       const data = await res.json()
       expect(data.exists).toBe(false)
@@ -94,7 +99,7 @@ describe('Bookmark API', () => {
 
   describe('GET /api/bookmarks/:id', () => {
     it('should return 404 for non-existent bookmark', async () => {
-      const res = await app.request('/api/bookmarks/999', {}, env(db))
+      const res = await app.request('/api/bookmarks/999', { headers: await authHeaders() }, env(db))
       expect(res.status).toBe(404)
       const data = await res.json()
       expect(data.error).toBe('Bookmark not found')
@@ -102,10 +107,10 @@ describe('Bookmark API', () => {
 
     it('should return the bookmark when it exists', async () => {
       db.seed('bookmarks', [
-        { id: 1, title: 'Test', url: 'https://test.com', description: 'desc', category_id: null, click_count: 0, created_at: '2024-01-01', updated_at: '2024-01-01', last_clicked_at: null },
+        { id: 1, title: 'Test', url: 'https://test.com', description: 'desc', category_id: null, click_count: 0, created_at: '2024-01-01', updated_at: '2024-01-01', last_clicked_at: null, user_id: 1 },
       ])
 
-      const res = await app.request('/api/bookmarks/1', {}, env(db))
+      const res = await app.request('/api/bookmarks/1', { headers: await authHeaders() }, env(db))
       expect(res.status).toBe(200)
       const data = await res.json()
       expect(data.title).toBe('Test')
@@ -117,7 +122,7 @@ describe('Bookmark API', () => {
     it('should create a bookmark', async () => {
       const res = await app.request('/api/bookmarks', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { ...(await authHeaders()), 'Content-Type': 'application/json' },
         body: JSON.stringify({ title: 'New', url: 'https://new.com' }),
       }, env(db))
       expect(res.status).toBe(201)
@@ -130,7 +135,7 @@ describe('Bookmark API', () => {
     it('should return 400 when title is missing', async () => {
       const res = await app.request('/api/bookmarks', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { ...(await authHeaders()), 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: 'https://new.com' }),
       }, env(db))
       expect(res.status).toBe(400)
@@ -139,7 +144,7 @@ describe('Bookmark API', () => {
     it('should return 400 when url is missing', async () => {
       const res = await app.request('/api/bookmarks', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { ...(await authHeaders()), 'Content-Type': 'application/json' },
         body: JSON.stringify({ title: 'New' }),
       }, env(db))
       expect(res.status).toBe(400)
@@ -150,7 +155,7 @@ describe('Bookmark API', () => {
     it('should return 404 for non-existent bookmark', async () => {
       const res = await app.request('/api/bookmarks/999', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { ...(await authHeaders()), 'Content-Type': 'application/json' },
         body: JSON.stringify({ title: 'Updated' }),
       }, env(db))
       expect(res.status).toBe(404)
@@ -158,12 +163,12 @@ describe('Bookmark API', () => {
 
     it('should update an existing bookmark', async () => {
       db.seed('bookmarks', [
-        { id: 1, title: 'Old', url: 'https://old.com', description: '', category_id: null, click_count: 0, created_at: '2024-01-01', updated_at: '2024-01-01', last_clicked_at: null },
+        { id: 1, title: 'Old', url: 'https://old.com', description: '', category_id: null, click_count: 0, created_at: '2024-01-01', updated_at: '2024-01-01', last_clicked_at: null, user_id: 1 },
       ])
 
       const res = await app.request('/api/bookmarks/1', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { ...(await authHeaders()), 'Content-Type': 'application/json' },
         body: JSON.stringify({ title: 'Updated' }),
       }, env(db))
       expect(res.status).toBe(200)
@@ -174,16 +179,16 @@ describe('Bookmark API', () => {
 
   describe('DELETE /api/bookmarks/:id', () => {
     it('should return 404 for non-existent bookmark', async () => {
-      const res = await app.request('/api/bookmarks/999', { method: 'DELETE' }, env(db))
+      const res = await app.request('/api/bookmarks/999', { method: 'DELETE', headers: await authHeaders() }, env(db))
       expect(res.status).toBe(404)
     })
 
     it('should delete an existing bookmark', async () => {
       db.seed('bookmarks', [
-        { id: 1, title: 'ToDelete', url: 'https://del.com', description: '', category_id: null, click_count: 0, created_at: '2024-01-01', updated_at: '2024-01-01', last_clicked_at: null },
+        { id: 1, title: 'ToDelete', url: 'https://del.com', description: '', category_id: null, click_count: 0, created_at: '2024-01-01', updated_at: '2024-01-01', last_clicked_at: null, user_id: 1 },
       ])
 
-      const res = await app.request('/api/bookmarks/1', { method: 'DELETE' }, env(db))
+      const res = await app.request('/api/bookmarks/1', { method: 'DELETE', headers: await authHeaders() }, env(db))
       expect(res.status).toBe(204)
       expect(db.getAll('bookmarks')).toHaveLength(0)
     })
@@ -191,16 +196,16 @@ describe('Bookmark API', () => {
 
   describe('POST /api/bookmarks/:id/click', () => {
     it('should return 404 for non-existent bookmark', async () => {
-      const res = await app.request('/api/bookmarks/999/click', { method: 'POST' }, env(db))
+      const res = await app.request('/api/bookmarks/999/click', { method: 'POST', headers: await authHeaders() }, env(db))
       expect(res.status).toBe(404)
     })
 
     it('should increment click count', async () => {
       db.seed('bookmarks', [
-        { id: 1, title: 'Click', url: 'https://click.com', description: '', category_id: null, click_count: 0, created_at: '2024-01-01', updated_at: '2024-01-01', last_clicked_at: null },
+        { id: 1, title: 'Click', url: 'https://click.com', description: '', category_id: null, click_count: 0, created_at: '2024-01-01', updated_at: '2024-01-01', last_clicked_at: null, user_id: 1 },
       ])
 
-      const res = await app.request('/api/bookmarks/1/click', { method: 'POST' }, env(db))
+      const res = await app.request('/api/bookmarks/1/click', { method: 'POST', headers: await authHeaders() }, env(db))
       expect(res.status).toBe(200)
       const data = await res.json()
       expect(data.clickCount).toBe(1)
@@ -212,7 +217,7 @@ describe('Bookmark API', () => {
     it('should return 400 for empty array', async () => {
       const res = await app.request('/api/bookmarks/batch-delete', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { ...(await authHeaders()), 'Content-Type': 'application/json' },
         body: JSON.stringify([]),
       }, env(db))
       expect(res.status).toBe(400)
@@ -220,14 +225,14 @@ describe('Bookmark API', () => {
 
     it('should delete multiple bookmarks', async () => {
       db.seed('bookmarks', [
-        { id: 1, title: 'A', url: 'https://a.com', description: '', category_id: null, click_count: 0, created_at: '2024-01-01', updated_at: '2024-01-01', last_clicked_at: null },
-        { id: 2, title: 'B', url: 'https://b.com', description: '', category_id: null, click_count: 0, created_at: '2024-01-02', updated_at: '2024-01-02', last_clicked_at: null },
-        { id: 3, title: 'C', url: 'https://c.com', description: '', category_id: null, click_count: 0, created_at: '2024-01-03', updated_at: '2024-01-03', last_clicked_at: null },
+        { id: 1, title: 'A', url: 'https://a.com', description: '', category_id: null, click_count: 0, created_at: '2024-01-01', updated_at: '2024-01-01', last_clicked_at: null, user_id: 1 },
+        { id: 2, title: 'B', url: 'https://b.com', description: '', category_id: null, click_count: 0, created_at: '2024-01-02', updated_at: '2024-01-02', last_clicked_at: null, user_id: 1 },
+        { id: 3, title: 'C', url: 'https://c.com', description: '', category_id: null, click_count: 0, created_at: '2024-01-03', updated_at: '2024-01-03', last_clicked_at: null, user_id: 1 },
       ])
 
       const res = await app.request('/api/bookmarks/batch-delete', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { ...(await authHeaders()), 'Content-Type': 'application/json' },
         body: JSON.stringify([1, 3]),
       }, env(db))
       expect(res.status).toBe(200)

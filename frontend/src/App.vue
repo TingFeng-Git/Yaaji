@@ -28,6 +28,11 @@
         <div class="header-right">
           <router-link to="/categories" class="nav-link">分类管理</router-link>
           <router-link to="/" class="nav-link">书签列表</router-link>
+          <span v-if="isAuthenticated" class="user-info">
+            👤 {{ user?.username }}
+          </span>
+          <button v-if="isAuthenticated" @click="handleLogout" class="logout-btn">登出</button>
+          <router-link v-else to="/login" class="nav-link">登录</router-link>
         </div>
       </div>
     </header>
@@ -45,8 +50,9 @@
 
 <script>
 import { ref, provide, onMounted, computed } from 'vue'
-import { categoryApi } from './services/api'
+import { categoryApi, authApi } from './services/api'
 import { sharedState } from './store/sharedState'
+import { authState } from './store/auth'
 import SearchSelect from './components/SearchSelect.vue'
 import { logger } from './services/logger'
 
@@ -58,6 +64,8 @@ export default {
   setup() {
     const searchKeyword = ref('')
     const searchCategoryId = ref(null)
+    const isAuthenticated = computed(() => authState.isAuthenticated)
+    const user = computed(() => authState.user)
 
     const handleSearch = () => {
     }
@@ -65,14 +73,23 @@ export default {
     const fetchCategories = async () => {
       try {
         const response = await categoryApi.getAll()
-        sharedState.categories = response.data
+        sharedState.categories = response
       } catch (err) {
         logger.error('获取分类失败', err)
       }
     }
 
+    const handleLogout = async () => {
+      await authApi.logout()
+      logger.info('已登出')
+      // 路由守卫会拦截，跳转到登录页
+      window.location.href = '/login'
+    }
+
     onMounted(() => {
-      fetchCategories()
+      if (isAuthenticated.value) {
+        fetchCategories()
+      }
     })
 
     provide('searchKeyword', searchKeyword)
@@ -82,7 +99,10 @@ export default {
       searchKeyword,
       searchCategoryId,
       categories: computed(() => sharedState.categories),
-      handleSearch
+      handleSearch,
+      isAuthenticated,
+      user,
+      handleLogout
     }
   }
 }
@@ -215,6 +235,32 @@ body {
 .nav-link.router-link-active {
   color: #667eea;
   background: rgba(102, 126, 234, 0.1);
+}
+
+.user-info {
+  color: #667eea;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  background: rgba(102, 126, 234, 0.1);
+}
+
+.logout-btn {
+  color: #dc2626;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.logout-btn:hover {
+  background: rgba(220, 38, 38, 0.1);
 }
 
 .main {

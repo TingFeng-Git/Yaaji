@@ -4,6 +4,7 @@ export interface Bookmark {
   url: string
   description: string
   categoryId: number
+  userId: number
   createdAt: string
   updatedAt: string
   lastClickedAt: string | null
@@ -14,6 +15,13 @@ export interface Category {
   id: number
   name: string
   color: string
+  userId: number
+  createdAt: string
+}
+
+export interface User {
+  id: number
+  username: string
   createdAt: string
 }
 
@@ -22,4 +30,9 @@ export interface Env {
   CORS_ORIGIN: string
   DB: D1Database
   IMPORT_TASKS: DurableObjectNamespace
+}
+
+export interface AuthContext {
+  userId: number
+  username: string
 }

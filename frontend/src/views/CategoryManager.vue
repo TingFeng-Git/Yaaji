@@ -235,7 +235,7 @@ export default {
       error.value = null
       try {
         const response = await categoryApi.getAll()
-        sharedState.categories = response.data
+        sharedState.categories = response
       } catch (err) {
         error.value = '获取分类失败'
         logger.error(err)
@@ -291,7 +291,7 @@ export default {
     const deleteSelectedCategories = () => {
       showConfirm(`确定要删除选中的 ${selectedCategories.value.length} 个分类吗？`, async () => {
         try {
-          await categoryApi.deleteBatch(selectedCategories.value)
+          await categoryApi.batchDelete(selectedCategories.value)
           sharedState.categories = sharedState.categories.filter(
             c => !selectedCategories.value.includes(c.id)
           )
@@ -309,7 +309,7 @@ export default {
       showConfirm('确定要删除所有没有书签的分类吗？', async () => {
         try {
           const response = await categoryApi.deleteEmpty()
-          const count = response.data.deletedCount
+          const count = response.deletedCount
           await fetchCategories()
           selectedCategories.value = []
           showToast(count > 0 ? `已删除 ${count} 个空分类` : '没有空分类需要删除')
@@ -332,7 +332,7 @@ export default {
           showToast('修改成功')
         } else {
           const response = await categoryApi.create(form.value)
-          sharedState.categories.push(response.data)
+          sharedState.categories.push(response)
           showToast('添加成功')
         }
         closeModal()

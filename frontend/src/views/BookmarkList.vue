@@ -279,7 +279,7 @@ export default {
       error.value = null
       try {
         const response = await bookmarkApi.getAll()
-        sharedState.bookmarks = response.data
+        sharedState.bookmarks = response
         initialLoading.value = false
         if (currentPage.value > totalPages.value) {
           currentPage.value = Math.max(1, totalPages.value)
@@ -293,7 +293,7 @@ export default {
     const fetchCategories = async () => {
       try {
         const response = await categoryApi.getAll()
-        sharedState.categories = response.data
+        sharedState.categories = response
       } catch (err) {
         logger.error('获取分类失败', err)
       }
@@ -306,7 +306,7 @@ export default {
 
     const handleClick = async (id) => {
       try {
-        await bookmarkApi.recordClick(id)
+        await bookmarkApi.click(id)
         const bookmark = sharedState.bookmarks.find(b => b.id === id)
         if (bookmark) {
           bookmark.lastClickedAt = new Date().toISOString()
@@ -337,7 +337,7 @@ export default {
     const deleteSelectedBookmarks = async () => {
       showConfirm(`确定要删除选中的 ${selectedBookmarks.value.length} 个书签吗？`, async () => {
         try {
-          await bookmarkApi.deleteBatch(selectedBookmarks.value)
+          await bookmarkApi.batchDelete(selectedBookmarks.value)
           selectedBookmarks.value = []
           showToast('批量删除成功')
           fetchBookmarks()
@@ -372,7 +372,7 @@ export default {
           importStatusText.value = '正在上传: ' + percentCompleted + '%'
         })
 
-        const data = response.data
+        const data = response
         if (data.taskId) {
           importStatus.value = 'parsing'
           importStatusText.value = '文件上传完成，等待解析...'
@@ -406,7 +406,7 @@ export default {
       const poll = async () => {
         try {
           const response = await bookmarkApi.getImportProgress(taskId)
-          const progress = response.data
+          const progress = response
 
           importStatus.value = progress.status || 'importing'
           importProgress.value = progress.percent || 0
@@ -454,17 +454,11 @@ export default {
 
     const handleExport = async () => {
       try {
-        const response = await bookmarkApi.exportBookmarks()
-        const url = window.URL.createObjectURL(new Blob([response.data]))
+        const blob = await bookmarkApi.exportBookmarks()
+        const url = window.URL.createObjectURL(blob)
         const link = document.createElement('a')
         link.href = url
-        const contentDisposition = response.headers['content-disposition']
-        let fileName = 'bookmarks.html'
-        if (contentDisposition) {
-          const fileNameMatch = contentDisposition.match(/filename=(.+)/)
-          if (fileNameMatch.length === 2) fileName = fileNameMatch[1]
-        }
-        link.setAttribute('download', fileName)
+        link.setAttribute('download', 'bookmarks.html')
         document.body.appendChild(link)
         link.click()
         link.remove()
