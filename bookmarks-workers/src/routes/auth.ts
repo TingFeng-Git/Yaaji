@@ -23,6 +23,14 @@ function comparePassword(password: string, hash: string, secret: string): boolea
   return hash === btoa(password + ':' + secret.slice(0, 16))
 }
 
+function mapUser(u: any) {
+  return {
+    id: u.id,
+    username: u.username,
+    createdAt: u.created_at,
+  }
+}
+
 // 注册
 authRoutes.post('/register', async (c) => {
   const JWT_SECRET = c.env.JWT_SECRET || DEFAULT_JWT_SECRET
@@ -69,7 +77,7 @@ authRoutes.post('/register', async (c) => {
 
   return c.json({
     message: '注册成功',
-    user: { id: userId, username },
+    user: mapUser({ id: userId, username, created_at: now }),
     token,
   })
 })
@@ -98,7 +106,7 @@ authRoutes.post('/login', async (c) => {
 
   return c.json({
     message: '登录成功',
-    user: { id: user.id, username: user.username },
+    user: mapUser(user),
     token,
   })
 })
@@ -136,7 +144,7 @@ authRoutes.get('/me', async (c) => {
       return c.json({ error: '用户不存在' }, 404)
     }
 
-    return c.json({ user })
+    return c.json({ user: mapUser(user) })
   } catch {
     return c.json({ error: 'Token 无效或已过期' }, 401)
   }

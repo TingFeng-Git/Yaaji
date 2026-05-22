@@ -2,6 +2,15 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import type { Env } from '../types'
 
+function mapCategory(row: Record<string, unknown>) {
+  return {
+    id: row.id,
+    name: row.name,
+    color: row.color,
+    createdAt: row.created_at,
+  }
+}
+
 export const categoryRoutes = new Hono<{ Bindings: Env; Variables: { userId: number; username: string } }>()
 
 categoryRoutes.use('*', cors({
@@ -15,7 +24,7 @@ categoryRoutes.get('/', async (c) => {
   const userId = c.get('userId')
   try {
     const { results } = await db.prepare('SELECT * FROM categories WHERE user_id = ? ORDER BY created_at DESC').bind(userId).all()
-    return c.json(results)
+    return c.json((results || []).map(mapCategory))
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
     return c.json({ error: message }, 500)
@@ -33,7 +42,7 @@ categoryRoutes.get('/:id', async (c) => {
     return c.json({ error: `Category not found with id: ${id}` }, 404)
   }
 
-  return c.json(category)
+  return c.json(mapCategory(category))
 })
 
 categoryRoutes.post('/', async (c) => {
@@ -52,7 +61,7 @@ categoryRoutes.post('/', async (c) => {
     'INSERT INTO categories (name, color, user_id) VALUES (?, ?, ?) RETURNING *'
   ).bind(name, color, userId).first()
 
-  return c.json(result, 201)
+  return c.json(mapCategory(result), 201)
 })
 
 categoryRoutes.put('/:id', async (c) => {
@@ -77,7 +86,7 @@ categoryRoutes.put('/:id', async (c) => {
     'UPDATE categories SET name = ?, color = ? WHERE id = ? AND user_id = ? RETURNING *'
   ).bind(name, color, id, userId).first()
 
-  return c.json(result)
+  return c.json(mapCategory(result))
 })
 
 categoryRoutes.post('/batch-delete', async (c) => {
