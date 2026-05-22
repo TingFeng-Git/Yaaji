@@ -102,16 +102,7 @@
       </div>
     </div>
 
-    <div v-if="confirmDialog.show" class="confirm-overlay">
-      <div class="confirm-dialog">
-        <div class="confirm-icon">⚠️</div>
-        <div class="confirm-message">{{ confirmDialog.message }}</div>
-        <div class="confirm-actions">
-          <button @click="cancelConfirm" class="confirm-btn cancel">取消</button>
-          <button @click="executeConfirm" class="confirm-btn confirm">确定</button>
-        </div>
-      </div>
-    </div>
+    <ConfirmDialog :show="confirmDialog.show" :message="confirmDialog.message" @confirm="executeConfirm" @cancel="cancelConfirm" />
 
     <div v-if="toast.show" class="toast" :class="toast.type">
       <span class="toast-icon">{{ toast.type === 'success' ? '✓' : '✕' }}</span>
@@ -125,9 +116,13 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { categoryApi } from '../services/api'
 import { sharedState } from '../store/sharedState'
 import { logger } from '../services/logger'
+import ConfirmDialog from '../components/ConfirmDialog.vue'
 
 export default {
   name: 'CategoryManager',
+  components: {
+    ConfirmDialog,
+  },
   setup() {
     const loading = ref(false)
     const error = ref(null)
@@ -176,7 +171,7 @@ export default {
     const colorOptions = [
       '#667eea', '#764ba2', '#f093fb', '#f5576c',
       '#4facfe', '#00f2fe', '#43e97b', '#38f9d7',
-      '#fa709a', '#fee140', '#fa709a', '#a8edea'
+      '#fa709a', '#fee140', '#a8edea'
     ]
 
     const hasSearch = computed(() => {
@@ -280,7 +275,7 @@ export default {
           selectedCategories.value = selectedCategories.value.filter(cid => cid !== id)
           showToast('删除成功')
         } catch (err) {
-          const message = err.response?.data?.error || err.response?.data?.message || err.message || '删除分类失败'
+          const message = err.message || '删除分类失败'
           showToast(message, 'error')
           logger.error(err)
         }
@@ -297,7 +292,7 @@ export default {
           selectedCategories.value = []
           showToast('批量删除成功')
         } catch (err) {
-          const message = err.response?.data?.error || err.response?.data?.message || err.message || '批量删除失败'
+          const message = err.message || '批量删除失败'
           showToast(message, 'error')
           logger.error(err)
         }
@@ -313,7 +308,7 @@ export default {
           selectedCategories.value = []
           showToast(count > 0 ? `已删除 ${count} 个空分类` : '没有空分类需要删除')
         } catch (err) {
-          const message = err.response?.data?.error || err.response?.data?.message || err.message || '删除空分类失败'
+          const message = err.message || '删除空分类失败'
           showToast(message, 'error')
           logger.error(err)
         }
