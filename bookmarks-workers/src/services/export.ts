@@ -35,19 +35,21 @@ function toEpochSeconds(isoString: string | null): number {
 
 export async function exportBookmarks(
   db: D1Database,
+  userId: number,
   ids?: number[]
 ): Promise<string> {
   let bookmarks: BookmarkRow[]
   if (ids && ids.length > 0) {
     const placeholders = ids.map(() => '?').join(',')
     const { results } = await db
-      .prepare(`SELECT * FROM bookmarks WHERE id IN (${placeholders}) ORDER BY category_id, created_at`)
-      .bind(...ids)
+      .prepare(`SELECT * FROM bookmarks WHERE id IN (${placeholders}) AND user_id = ? ORDER BY category_id, created_at`)
+      .bind(...ids, userId)
       .all<BookmarkRow>()
     bookmarks = results || []
   } else {
     const { results } = await db
-      .prepare('SELECT * FROM bookmarks ORDER BY category_id, created_at')
+      .prepare('SELECT * FROM bookmarks WHERE user_id = ? ORDER BY category_id, created_at')
+      .bind(userId)
       .all<BookmarkRow>()
     bookmarks = results || []
   }

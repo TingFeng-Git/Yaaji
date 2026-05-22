@@ -89,13 +89,15 @@ bookmarkRoutes.get('/', async (c) => {
 
 // /export must be defined before /:id to avoid param capture
 bookmarkRoutes.get('/export', async (c) => {
-  const html = await exportBookmarks(c.env.DB)
+  const userId = c.get('userId')
+  const html = await exportBookmarks(c.env.DB, userId)
   return c.newResponse(html, 200, { 'Content-Type': 'text/html; charset=utf-8' })
 })
 
 bookmarkRoutes.post('/export', async (c) => {
+  const userId = c.get('userId')
   const body = await c.req.json<{ ids: number[] }>()
-  const html = await exportBookmarks(c.env.DB, body.ids)
+  const html = await exportBookmarks(c.env.DB, userId, body.ids)
   return c.newResponse(html, 200, { 'Content-Type': 'text/html; charset=utf-8' })
 })
 
