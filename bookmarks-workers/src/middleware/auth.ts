@@ -1,9 +1,11 @@
 import { MiddlewareHandler } from 'hono'
 import { verify } from 'hono/jwt'
+import type { Env } from '../types'
 
 const DEFAULT_JWT_SECRET = 'yaji-bookmarks-jwt-secret-change-in-production'
 
 export const requireAuth: MiddlewareHandler<{
+  Bindings: Env
   Variables: { userId: number; username: string }
 }> = async (c, next) => {
   const JWT_SECRET = c.env.JWT_SECRET || DEFAULT_JWT_SECRET

@@ -61,6 +61,7 @@ categoryRoutes.post('/', async (c) => {
     'INSERT INTO categories (name, color, user_id) VALUES (?, ?, ?) RETURNING *'
   ).bind(name, color, userId).first()
 
+  if (!result) return c.json({ error: '创建分类失败' }, 500)
   return c.json(mapCategory(result), 201)
 })
 
@@ -86,6 +87,7 @@ categoryRoutes.put('/:id', async (c) => {
     'UPDATE categories SET name = ?, color = ? WHERE id = ? AND user_id = ? RETURNING *'
   ).bind(name, color, id, userId).first()
 
+  if (!result) return c.json({ error: '更新分类失败' }, 500)
   return c.json(mapCategory(result))
 })
 
