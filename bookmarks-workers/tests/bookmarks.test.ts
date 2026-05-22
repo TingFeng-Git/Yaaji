@@ -241,4 +241,20 @@ describe('Bookmark API', () => {
       expect(db.getAll('bookmarks')).toHaveLength(1)
     })
   })
+
+  describe('camelCase API format', () => {
+    it('returns camelCase fields (categoryId, createdAt, updatedAt)', async () => {
+      db.seed('bookmarks', [
+        { id: 1, title: 'Test', url: 'https://test.com', description: 'desc', category_id: 1, click_count: 0, created_at: '2024-01-01', updated_at: '2024-01-02', last_clicked_at: null, user_id: 1 },
+      ])
+
+      const res = await app.request('/api/bookmarks', { headers: await authHeaders() }, env(db))
+      expect(res.status).toBe(200)
+      const data = await res.json()
+      expect(data[0].categoryId).toBe(1)
+      expect(data[0].createdAt).toBe('2024-01-01')
+      expect(data[0].updatedAt).toBe('2024-01-02')
+      expect(data[0].lastClickedAt).toBeNull()
+    })
+  })
 })

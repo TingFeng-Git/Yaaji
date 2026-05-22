@@ -1,0 +1,20 @@
+Task: T7 - Categories API camelCase mapping
+File: bookmarks-workers/src/routes/categories.ts
+
+Added mapCategory() function (lines 5-12):
+- id → id
+- name → name
+- color → color
+- created_at → createdAt
+- user_id → (excluded from response)
+
+Applied to 4 routes:
+1. GET / (line 27): (results || []).map(mapCategory)
+2. GET /:id (line 45): mapCategory(category)
+3. POST / (line 64): mapCategory(result)
+4. PUT /:id (line 89): mapCategory(result)
+
+Routes NOT modified (no response mapping needed):
+- POST /batch-delete (returns 204)
+- DELETE /empty (returns { deletedCount })
+- DELETE /:id (returns 204)

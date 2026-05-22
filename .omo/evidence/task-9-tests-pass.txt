@@ -1,0 +1,13 @@
+T9 - Update categories.test.ts: created_at → createdAt, remove user_id assertions
+================================================================================
+
+Status: PASSED
+
+Changes made:
+- No existing assertions in categories.test.ts reference `created_at` or `user_id`
+  in test expectations (only in seed data, which correctly uses snake_case for mock DB).
+- T9 was trivially satisfied: no old assertions to update.
+
+Verification:
+- All 24 category tests pass (including 5 new camelCase tests)
+- Full test suite: 61 tests pass across 4 test files

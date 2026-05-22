@@ -1,0 +1,26 @@
+TASK: Auth /me camelCase mapping — add mapUser() for user responses
+
+CHANGED FILE: bookmarks-workers/src/routes/auth.ts
+
+CHANGES MADE:
+1. Added `mapUser()` function (lines 26-32) that converts `created_at` → `createdAt`
+   ```ts
+   function mapUser(u: any) {
+     return {
+       id: u.id,
+       username: u.username,
+       createdAt: u.created_at,
+     }
+   }
+   ```
+
+2. Applied `mapUser()` in 3 places:
+   - POST /register (line 80): `user: mapUser({ id: userId, username, created_at: now })`
+   - POST /login (line 109): `user: mapUser(user)`
+   - GET /me (line 147): `user: mapUser(user)` — previously `c.json({ user })` which sent snake_case `created_at`
+
+3. JWT payloads UNCHANGED:
+   - Line 76: `sign({ userId, username }, JWT_SECRET)` — unchanged
+   - Line 105: `sign({ userId: user.id, username: user.username }, JWT_SECRET)` — unchanged
+
+SQL queries unchanged, DB column structure unchanged.

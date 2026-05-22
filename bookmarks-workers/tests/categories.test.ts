@@ -227,6 +227,72 @@ describe('Category API', () => {
     })
   })
 
+  describe('camelCase API format', () => {
+    it('GET /categories returns camelCase createdAt field', async () => {
+      db.seed('categories', [
+        { id: 1, name: 'Tech', color: '#ff0000', created_at: '2024-01-01', user_id: 1 },
+      ])
+
+      const res = await app.request('/api/categories', { headers: await authHeaders() }, env(db))
+      expect(res.status).toBe(200)
+      const data = await res.json()
+      expect(data[0].createdAt).toBe('2024-01-01')
+    })
+
+    it('GET /categories/:id returns camelCase createdAt', async () => {
+      db.seed('categories', [
+        { id: 1, name: 'Tech', color: '#ff0000', created_at: '2024-01-01', user_id: 1 },
+      ])
+
+      const res = await app.request('/api/categories/1', { headers: await authHeaders() }, env(db))
+      expect(res.status).toBe(200)
+      const data = await res.json()
+      expect(data.createdAt).toBe('2024-01-01')
+    })
+
+    it('POST /categories response uses camelCase (no snake_case fields)', async () => {
+      const res = await app.request('/api/categories', {
+        method: 'POST',
+        headers: { ...(await authHeaders()), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: 'New', color: '#abc123' }),
+      }, env(db))
+      expect(res.status).toBe(201)
+      const data = await res.json()
+      expect(data.id).toBeDefined()
+      expect(data.name).toBe('New')
+      expect(data.color).toBe('#abc123')
+      expect(data.created_at).toBeUndefined()
+      expect(data.user_id).toBeUndefined()
+    })
+
+    it('PUT /categories/:id returns camelCase createdAt', async () => {
+      db.seed('categories', [
+        { id: 1, name: 'Old', color: '#000', created_at: '2024-01-01', user_id: 1 },
+      ])
+
+      const res = await app.request('/api/categories/1', {
+        method: 'PUT',
+        headers: { ...(await authHeaders()), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: 'Updated', color: '#fff' }),
+      }, env(db))
+      expect(res.status).toBe(200)
+      const data = await res.json()
+      expect(data.createdAt).toBe('2024-01-01')
+    })
+
+    it('user_id is not included in category responses', async () => {
+      db.seed('categories', [
+        { id: 1, name: 'Tech', color: '#ff0000', created_at: '2024-01-01', user_id: 1 },
+      ])
+
+      const res = await app.request('/api/categories', { headers: await authHeaders() }, env(db))
+      expect(res.status).toBe(200)
+      const data = await res.json()
+      expect(data[0].user_id).toBeUndefined()
+      expect(data[0].userId).toBeUndefined()
+    })
+  })
+
   describe('DELETE /api/categories/empty', () => {
     it('should delete categories with no bookmarks', async () => {
       db.seed('categories', [

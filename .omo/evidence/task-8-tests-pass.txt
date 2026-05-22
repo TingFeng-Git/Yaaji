@@ -1,0 +1,19 @@
+TASK: Auth /me camelCase mapping
+
+TEST RESULTS: All 52 tests pass (3 test files)
+
+$ cd bookmarks-workers && npm test
+> yaji-bookmarks-workers@1.0.0 test
+> vitest run
+
+ RUN  v4.1.6 /root/code/Yaaji/bookmarks-workers
+
+ Test Files  3 passed (3)
+      Tests  52 passed (52)
+   Start at  11:12:26
+   Duration  3.91s (transform 529ms, setup 0ms, import 1.55s, tests 754ms, environment 1ms)
+
+Test files:
+- bookmarks.test.ts
+- categories.test.ts
+- import.test.ts
