@@ -122,3 +122,6 @@ h2db/
 .trae/
 
 bookmarks_2026-05-18.html
+
+# OpenCode internal state (ephemeral)
+.omo/run-continuation/
