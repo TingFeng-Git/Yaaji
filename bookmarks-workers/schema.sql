@@ -22,12 +22,6 @@ CREATE TABLE IF NOT EXISTS sessions (
 CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token);
 CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
 
--- Add user_id to bookmarks and categories for data isolation
-ALTER TABLE bookmarks ADD COLUMN user_id INTEGER;
-ALTER TABLE categories ADD COLUMN user_id INTEGER;
-CREATE INDEX IF NOT EXISTS idx_bookmarks_user_id ON bookmarks(user_id);
-CREATE INDEX IF NOT EXISTS idx_categories_user_id ON categories(user_id);
-
 CREATE TABLE IF NOT EXISTS categories (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
@@ -38,7 +32,7 @@ CREATE TABLE IF NOT EXISTS categories (
 CREATE TABLE IF NOT EXISTS bookmarks (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL,
-    url TEXT NOT NULL UNIQUE,
+    url TEXT NOT NULL,
     description TEXT,
     category_id INTEGER,
     click_count INTEGER NOT NULL DEFAULT 0,
@@ -52,6 +46,15 @@ CREATE INDEX IF NOT EXISTS idx_bookmarks_click_count ON bookmarks(click_count DE
 CREATE INDEX IF NOT EXISTS idx_bookmarks_last_clicked_at ON bookmarks(last_clicked_at DESC);
 CREATE INDEX IF NOT EXISTS idx_bookmarks_created_at ON bookmarks(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_bookmarks_category_created ON bookmarks(category_id, created_at DESC);
+
+-- Add user_id to bookmarks and categories for data isolation
+ALTER TABLE bookmarks ADD COLUMN user_id INTEGER;
+ALTER TABLE categories ADD COLUMN user_id INTEGER;
+CREATE INDEX IF NOT EXISTS idx_bookmarks_user_id ON bookmarks(user_id);
+CREATE INDEX IF NOT EXISTS idx_categories_user_id ON categories(user_id);
+
+-- Per-user URL uniqueness (url + user_id composite)
+CREATE UNIQUE INDEX IF NOT EXISTS idx_bookmarks_url_user ON bookmarks(url, user_id);
 
 -- Import tasks table for async progress tracking
 CREATE TABLE IF NOT EXISTS import_tasks (
