@@ -1,34 +1,39 @@
 <template>
-  <div class="recent-bookmarks" v-if="recentBookmarks.length > 0">
-    <div class="recent-header">
-      <h3 class="recent-title">
-        <span class="recent-icon">🕐</span>
-        最近访问
-      </h3>
-      <span class="recent-count">{{ recentBookmarks.length }} 个</span>
-    </div>
-    <div class="recent-list">
-      <a
-        v-for="bookmark in recentBookmarks"
-        :key="bookmark.id"
-        :href="bookmark.url"
-        target="_blank"
-        class="recent-item"
-        @click="recordClick(bookmark.id)"
-      >
-        <div class="recent-item-content">
-          <span class="recent-item-title">{{ bookmark.title }}</span>
-          <span class="recent-item-url">{{ bookmark.url }}</span>
-        </div>
-        <div class="recent-item-meta">
-          <span v-if="getCategoryById(bookmark.categoryId)"
-                class="recent-category"
-                :style="{ backgroundColor: getCategoryById(bookmark.categoryId).color + '20', color: getCategoryById(bookmark.categoryId).color }">
-            {{ getCategoryById(bookmark.categoryId).name }}
-          </span>
-          <span class="recent-time">{{ formatLastClicked(bookmark.lastClickedAt) }}</span>
-        </div>
-      </a>
+  <div class="recent-bookmarks">
+    <div v-if="loading" class="loading">加载最近访问...</div>
+    <div v-else-if="error" class="error-recent">加载失败: {{ error }}</div>
+    <div v-else-if="recentBookmarks.length === 0" class="empty-recent">暂无最近访问</div>
+    <div v-else>
+      <div class="recent-header">
+        <h3 class="recent-title">
+          <span class="recent-icon">🕐</span>
+          最近访问
+        </h3>
+        <span class="recent-count">{{ recentBookmarks.length }} 个</span>
+      </div>
+      <div class="recent-list">
+        <a
+          v-for="bookmark in recentBookmarks"
+          :key="bookmark.id"
+          :href="bookmark.url"
+          target="_blank"
+          class="recent-item"
+          @click="recordClick(bookmark.id)"
+        >
+          <div class="recent-item-content">
+            <span class="recent-item-title">{{ bookmark.title }}</span>
+            <span class="recent-item-url">{{ bookmark.url }}</span>
+          </div>
+          <div class="recent-item-meta">
+            <span v-if="getCategoryById(bookmark.categoryId)"
+                  class="recent-category"
+                  :style="{ backgroundColor: getCategoryById(bookmark.categoryId).color + '20', color: getCategoryById(bookmark.categoryId).color }">
+              {{ getCategoryById(bookmark.categoryId).name }}
+            </span>
+            <span class="recent-time">{{ formatLastClicked(bookmark.lastClickedAt) }}</span>
+          </div>
+        </a>
+      </div>
     </div>
   </div>
 </template>
@@ -43,13 +48,20 @@ export default {
   name: 'RecentBookmarks',
   setup() {
     const recentBookmarks = ref([])
+    const loading = ref(true)
+    const error = ref(null)
 
     const fetchRecentBookmarks = async () => {
+      loading.value = true
+      error.value = null
       try {
         const response = await bookmarkApi.getRecent(3)
-        recentBookmarks.value = response
+        recentBookmarks.value = response || []
       } catch (err) {
-        logger.error('获取最近访问书签失败', err)
+        error.value = err.message || '获取最近访问失败'
+        recentBookmarks.value = []
+      } finally {
+        loading.value = false
       }
     }
 
@@ -97,6 +109,8 @@ export default {
 
     return {
       recentBookmarks,
+      loading,
+      error,
       getCategoryById,
       recordClick,
       formatLastClicked
@@ -225,6 +239,17 @@ export default {
   font-size: 12px;
   color: #999;
   white-space: nowrap;
+}
+
+.loading, .error-recent, .empty-recent {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+  font-size: 14px;
+}
+
+.error-recent {
+  color: #e74c3c;
 }
 
 @media (max-width: 768px) {
