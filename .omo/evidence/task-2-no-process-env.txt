@@ -1,0 +1,2 @@
+grep -r "process\.env\.JWT_SECRET" bookmarks-workers/src/
+Result: No matches found — all process.env.JWT_SECRET references removed.

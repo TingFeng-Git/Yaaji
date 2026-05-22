@@ -1,0 +1,22 @@
+TASK-5: Schema ordering verification
+
+All CREATE TABLE statements appear before their corresponding ALTER TABLE statements:
+
+1. CREATE TABLE users (line 4) - OK, no ALTER TABLE for users
+2. CREATE TABLE sessions (line 14) - OK, no ALTER TABLE for sessions
+3. CREATE TABLE categories (line 25) ✓ - ALTER TABLE categories (line 52) is AFTER
+4. CREATE TABLE bookmarks (line 32) ✓ - ALTER TABLE bookmarks (line 51) is AFTER
+5. CREATE TABLE import_tasks (line 60) - OK, no ALTER TABLE for import_tasks
+
+ALTER TABLE statements:
+- ALTER TABLE bookmarks ADD COLUMN user_id (line 51) — after CREATE TABLE bookmarks (line 32) ✓
+- ALTER TABLE categories ADD COLUMN user_id (line 52) — after CREATE TABLE categories (line 25) ✓
+
+Indexes:
+- All indexes appear after their respective table's CREATE TABLE ✓
+- idx_bookmarks_user_id (line 53) — after ALTER TABLE bookmarks ADD COLUMN user_id (line 51) ✓
+- idx_categories_user_id (line 54) — after ALTER TABLE categories ADD COLUMN user_id (line 52) ✓
+
+URL constraint change:
+- `url TEXT NOT NULL UNIQUE` → `url TEXT NOT NULL` (line 35) ✓
+- Added: CREATE UNIQUE INDEX idx_bookmarks_url_user ON bookmarks(url, user_id) (line 57) ✓

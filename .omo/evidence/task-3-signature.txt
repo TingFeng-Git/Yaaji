@@ -1,0 +1,20 @@
+=== TASK 3: Export userId Filter - Signature & SQL Changes ===
+
+1) export.ts - Function signature:
+   Line 36-39: export async function exportBookmarks(
+                  db: D1Database,
+                  userId: number,     <-- ADDED
+                  ids?: number[]
+                )
+
+2) export.ts - SQL with user_id filter:
+   Line 45: SELECT ... WHERE id IN (...) AND user_id = ? ORDER BY ...
+   Line 51: SELECT ... WHERE user_id = ? ORDER BY ...
+
+3) bookmarks.ts - GET /export:
+   Line 92-93: const userId = c.get('userId')
+               const html = await exportBookmarks(c.env.DB, userId)
+
+4) bookmarks.ts - POST /export:
+   Line 99-100: const userId = c.get('userId')  (line 97)
+                const html = await exportBookmarks(c.env.DB, userId, body.ids)

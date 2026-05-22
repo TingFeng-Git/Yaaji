@@ -1,0 +1,5 @@
+npm test (bookmarks-workers)
+Result:
+ Test Files  3 passed (3)
+      Tests  52 passed (52)
+   Duration  2.53s (transform 349ms, setup 0ms, import 1.02s, tests 538ms, environment 0ms)

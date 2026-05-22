@@ -1,0 +1,23 @@
+Task 6: Seed data compatibility with new schema
+===============================================
+Date: 2026-05-22
+
+Verified that all INSERT statements in seed.sql include user_id:
+
+1. users table (new):
+   - INSERT OR IGNORE INTO users (id, username, password_hash, created_at, updated_at) line 1
+     - Seeds default user (id=1) for dev/testing
+
+2. categories (3 INSERTs all with user_id):
+   - INSERT OR IGNORE INTO categories (id, name, color, created_at, user_id) line 6
+   - INSERT OR IGNORE INTO categories (id, name, color, created_at, user_id) line 7
+   - INSERT OR IGNORE INTO categories (id, name, color, created_at, user_id) line 8
+
+3. bookmarks (5 INSERTs all with user_id):
+   - INSERT OR IGNORE INTO bookmarks (id, title, url, description, category_id, click_count, created_at, updated_at, user_id) line 11
+   - INSERT OR IGNORE INTO bookmarks (id, title, url, description, category_id, click_count, created_at, updated_at, user_id) line 14
+   - INSERT OR IGNORE INTO bookmarks (id, title, url, description, category_id, click_count, created_at, updated_at, user_id) line 17
+   - INSERT OR IGNORE INTO bookmarks (id, title, url, description, category_id, click_count, created_at, updated_at, user_id) line 20
+   - INSERT OR IGNORE INTO bookmarks (id, title, url, description, category_id, click_count, created_at, updated_at, user_id) line 23
+
+Total: 9 INSERT statements — all include user_id (or are the users table itself)

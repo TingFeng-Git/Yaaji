@@ -54,6 +54,7 @@ describe('导入导出功能', () => {
     sharedState.bookmarks = []
     sharedState.categories = []
     vi.clearAllMocks()
+    bookmarkApi.getRecent.mockResolvedValue(createMockResponse([]))
     vi.useFakeTimers()
   })
 

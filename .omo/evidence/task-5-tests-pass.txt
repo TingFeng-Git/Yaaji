@@ -1,0 +1,16 @@
+TASK-5: Test results
+
+Command: cd bookmarks-workers && npm test
+
+Output:
+> yaji-bookmarks-workers@1.0.0 test
+> vitest run
+
+ RUN  v4.1.6 /root/code/Yaaji/bookmarks-workers
+
+ Test Files  3 passed (3)
+      Tests  52 passed (52)
+   Start at  11:06:47
+   Duration  4.63s (transform 629ms, setup 0ms, import 1.73s, tests 1.01s, environment 1ms)
+
+Status: ALL TESTS PASS (52/52)

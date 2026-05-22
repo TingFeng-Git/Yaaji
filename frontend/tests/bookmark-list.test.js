@@ -55,6 +55,7 @@ describe('BookmarkList', () => {
     sharedState.bookmarks = []
     sharedState.categories = []
     vi.clearAllMocks()
+    bookmarkApi.getRecent.mockResolvedValue(createMockResponse([]))
     vi.useFakeTimers()
   })
 

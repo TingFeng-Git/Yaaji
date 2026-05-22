@@ -1,0 +1,11 @@
+=== TASK 3: Export userId Filter - Test Results ===
+
+> yaji-bookmarks-workers@1.0.0 test
+> vitest run
+
+ RUN  v4.1.6 /root/code/Yaaji/bookmarks-workers
+
+ Test Files  3 passed (3)
+      Tests  52 passed (52)
+   Start at  11:06:34
+   Duration  5.86s (transform 691ms, setup 0ms, import 2.67s, tests 1.17s, environment 1ms)

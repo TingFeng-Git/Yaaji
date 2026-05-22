@@ -1,0 +1,2 @@
+grep -n "INSERT INTO sessions" bookmarks-workers/src/routes/auth.ts
+Result: No matches found — sessions table writes removed from logout handler.
