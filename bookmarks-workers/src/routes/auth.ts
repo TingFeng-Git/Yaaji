@@ -11,20 +11,21 @@ authRoutes.use('*', cors({
   allowHeaders: ['Content-Type', 'Authorization'],
 }))
 
-const JWT_SECRET = process.env.JWT_SECRET || 'yaji-bookmarks-jwt-secret-change-in-production'
+const DEFAULT_JWT_SECRET = 'yaji-bookmarks-jwt-secret-change-in-production'
 const TOKEN_EXPIRY = '7d'
 
 // 密码哈希（本地开发用简单哈希，生产应使用 bcrypt/argon2）
-function hashPassword(password: string): string {
-  return btoa(password + ':' + JWT_SECRET.slice(0, 16))
+function hashPassword(password: string, secret: string): string {
+  return btoa(password + ':' + secret.slice(0, 16))
 }
 
-function comparePassword(password: string, hash: string): boolean {
-  return hash === btoa(password + ':' + JWT_SECRET.slice(0, 16))
+function comparePassword(password: string, hash: string, secret: string): boolean {
+  return hash === btoa(password + ':' + secret.slice(0, 16))
 }
 
 // 注册
 authRoutes.post('/register', async (c) => {
+  const JWT_SECRET = c.env.JWT_SECRET || DEFAULT_JWT_SECRET
   const { username, password } = await c.req.json()
 
   if (!username || !password) {
@@ -51,7 +52,7 @@ authRoutes.post('/register', async (c) => {
     return c.json({ error: '用户名已存在' }, 409)
   }
 
-  const passwordHash = hashPassword(password)
+  const passwordHash = hashPassword(password, JWT_SECRET)
   const now = new Date().toISOString()
 
   const result = await db
@@ -75,6 +76,7 @@ authRoutes.post('/register', async (c) => {
 
 // 登录
 authRoutes.post('/login', async (c) => {
+  const JWT_SECRET = c.env.JWT_SECRET || DEFAULT_JWT_SECRET
   const { username, password } = await c.req.json()
 
   if (!username || !password) {
@@ -88,7 +90,7 @@ authRoutes.post('/login', async (c) => {
     .bind(username)
     .first<{ id: number; username: string; password_hash: string }>()
 
-  if (!user || !comparePassword(password, user.password_hash)) {
+  if (!user || !comparePassword(password, user.password_hash, JWT_SECRET)) {
     return c.json({ error: '用户名或密码错误' }, 401)
   }
 
@@ -101,35 +103,19 @@ authRoutes.post('/login', async (c) => {
   })
 })
 
-// 登出（将 token 加入黑名单）
+// 登出（简化为无操作，JWT 无状态）
 authRoutes.post('/logout', async (c) => {
   const authHeader = c.req.header('Authorization')
-  const token = authHeader?.replace('Bearer ', '')
-
-  if (!token) {
+  if (!authHeader?.startsWith('Bearer ')) {
     return c.json({ error: '未授权' }, 401)
   }
 
-  try {
-    const payload = await verify(token, JWT_SECRET, 'HS256')
-    const db = c.env.DB
-    const now = new Date().toISOString()
-
-    await db
-      .prepare(
-        'INSERT INTO sessions (user_id, token, expires_at) VALUES (?, ?, ?)'
-      )
-      .bind((payload as any).userId, token, now)
-      .run()
-
-    return c.json({ message: '登出成功' })
-  } catch {
-    return c.json({ error: 'Token 无效' }, 401)
-  }
+  return c.json({ message: '登出成功' })
 })
 
 // 获取当前用户信息
 authRoutes.get('/me', async (c) => {
+  const JWT_SECRET = c.env.JWT_SECRET || DEFAULT_JWT_SECRET
   const authHeader = c.req.header('Authorization')
   const token = authHeader?.replace('Bearer ', '')
 

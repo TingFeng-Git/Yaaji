@@ -29,4 +29,5 @@ export interface Env {
   ENVIRONMENT: string
   DB: D1Database
   IMPORT_TASKS: DurableObjectNamespace
+  JWT_SECRET: string
 }

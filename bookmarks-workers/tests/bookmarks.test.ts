@@ -3,7 +3,7 @@ import app from '../src/index'
 import { createMockDB, MockD1Database, createTestToken } from './helpers/mock-db'
 
 function env(db: MockD1Database) {
-  return { DB: db as unknown as D1Database, ENVIRONMENT: 'test', CORS_ORIGIN: '*' }
+  return { DB: db as unknown as D1Database, ENVIRONMENT: 'test', CORS_ORIGIN: '*', JWT_SECRET: 'yaji-bookmarks-jwt-secret-change-in-production' }
 }
 
 async function authHeaders() {
