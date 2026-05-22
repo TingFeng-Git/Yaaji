@@ -366,7 +366,7 @@ export default {
       importedCount.value = 0
 
       try {
-        const response = await bookmarkApi.importBookmarks(file)
+        const response = await bookmarkApi.import(file)
 
         const data = response
         if (data.taskId) {
@@ -380,7 +380,7 @@ export default {
           const poll = async () => {
             pollCount++
             try {
-              const progress = await bookmarkApi.getImportProgress(taskId)
+              const progress = await bookmarkApi.getProgress(taskId)
               importStatus.value = progress.status || 'importing'
               importProgress.value = progress.percent || 0
               importStatusText.value = progress.message || getStatusText(progress.status)
@@ -454,7 +454,7 @@ export default {
 
     const handleExport = async () => {
       try {
-        const blob = await bookmarkApi.exportBookmarks()
+        const blob = await bookmarkApi.export()
         const url = window.URL.createObjectURL(blob)
         const link = document.createElement('a')
         link.href = url

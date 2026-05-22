@@ -18,9 +18,9 @@ vi.mock('../src/services/api', () => ({
     click: vi.fn(),
     delete: vi.fn(),
     batchDelete: vi.fn(),
-    importBookmarks: vi.fn(),
-    getImportProgress: vi.fn(),
-    exportBookmarks: vi.fn()
+    import: vi.fn(),
+    getProgress: vi.fn(),
+    export: vi.fn()
   },
   categoryApi: {
     getAll: vi.fn(),
@@ -114,7 +114,7 @@ describe('导入导出功能', () => {
     it('点击导出应调用API', async () => {
       bookmarkApi.getAll.mockResolvedValue(createMockResponse([]))
       categoryApi.getAll.mockResolvedValue(createMockResponse([]))
-      bookmarkApi.exportBookmarks.mockResolvedValue({
+      bookmarkApi.export.mockResolvedValue({
         data: new Blob(['<html></html>'], { type: 'text/html' }),
         headers: { 'content-disposition': 'filename=bookmarks.html' }
       })
@@ -122,13 +122,13 @@ describe('导入导出功能', () => {
       await flushPromises()
       await wrapper.find('.btn-export').trigger('click')
       await flushPromises()
-      expect(bookmarkApi.exportBookmarks).toHaveBeenCalled()
+      expect(bookmarkApi.export).toHaveBeenCalled()
     })
 
     it('导出失败应显示错误提示', async () => {
       bookmarkApi.getAll.mockResolvedValue(createMockResponse([]))
       categoryApi.getAll.mockResolvedValue(createMockResponse([]))
-      bookmarkApi.exportBookmarks.mockRejectedValue(createMockError('导出失败'))
+      bookmarkApi.export.mockRejectedValue(createMockError('导出失败'))
       const wrapper = mountComponent()
       await flushPromises()
       await wrapper.find('.btn-export').trigger('click')
@@ -175,7 +175,7 @@ describe('导入导出功能', () => {
     it('导入成功后应刷新书签列表', async () => {
       bookmarkApi.getAll.mockResolvedValue(createMockResponse([]))
       categoryApi.getAll.mockResolvedValue(createMockResponse([]))
-      bookmarkApi.importBookmarks.mockResolvedValue(createMockResponse({
+      bookmarkApi.import.mockResolvedValue(createMockResponse({
         message: '导入成功',
         importedCount: 5
       }))
@@ -186,13 +186,13 @@ describe('导入导出功能', () => {
       Object.defineProperty(fileInput.element, 'files', { value: [file] })
       await fileInput.trigger('change')
       await flushPromises()
-      expect(bookmarkApi.importBookmarks).toHaveBeenCalled()
+      expect(bookmarkApi.import).toHaveBeenCalled()
     })
 
     it('导入失败应显示错误提示', async () => {
       bookmarkApi.getAll.mockResolvedValue(createMockResponse([]))
       categoryApi.getAll.mockResolvedValue(createMockResponse([]))
-      bookmarkApi.importBookmarks.mockRejectedValue(createMockError('导入失败'))
+      bookmarkApi.import.mockRejectedValue(createMockError('导入失败'))
       const wrapper = mountComponent()
       await flushPromises()
       const file = new File(['<html></html>'], 'bookmarks.html', { type: 'text/html' })
@@ -206,8 +206,8 @@ describe('导入导出功能', () => {
     it('异步导入应轮询进度', async () => {
       bookmarkApi.getAll.mockResolvedValue(createMockResponse([]))
       categoryApi.getAll.mockResolvedValue(createMockResponse([]))
-      bookmarkApi.importBookmarks.mockResolvedValue(createMockResponse({ taskId: 'task-123' }))
-      bookmarkApi.getImportProgress
+      bookmarkApi.import.mockResolvedValue(createMockResponse({ taskId: 'task-123' }))
+      bookmarkApi.getProgress
         .mockResolvedValueOnce(createMockResponse({ status: 'importing', percent: 50, current: 50, total: 100, message: '正在导入...' }))
         .mockResolvedValueOnce(createMockResponse({ status: 'completed', percent: 100, current: 100, total: 100, message: '导入完成' }))
       const wrapper = mountComponent()
@@ -219,7 +219,7 @@ describe('导入导出功能', () => {
       await flushPromises()
       vi.advanceTimersByTime(1000)
       await flushPromises()
-      expect(bookmarkApi.getImportProgress).toHaveBeenCalledWith('task-123')
+      expect(bookmarkApi.getProgress).toHaveBeenCalledWith('task-123')
     })
   })
 
@@ -269,7 +269,7 @@ describe('导入导出功能', () => {
     it('导入完成后应重置文件输入', async () => {
       bookmarkApi.getAll.mockResolvedValue(createMockResponse([]))
       categoryApi.getAll.mockResolvedValue(createMockResponse([]))
-      bookmarkApi.importBookmarks.mockResolvedValue(createMockResponse({
+      bookmarkApi.import.mockResolvedValue(createMockResponse({
         message: '导入成功',
         importedCount: 5
       }))

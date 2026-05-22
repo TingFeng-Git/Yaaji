@@ -17,9 +17,9 @@ vi.mock('../src/services/api', () => ({
     click: vi.fn(),
     delete: vi.fn(),
     batchDelete: vi.fn(),
-    importBookmarks: vi.fn(),
-    getImportProgress: vi.fn(),
-    exportBookmarks: vi.fn()
+    import: vi.fn(),
+    getProgress: vi.fn(),
+    export: vi.fn()
   },
   categoryApi: {
     getAll: vi.fn(),

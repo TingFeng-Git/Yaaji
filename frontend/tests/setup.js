@@ -1,24 +1,5 @@
 import { vi } from 'vitest'
 
-vi.mock('axios', () => {
-  const mockAxios = {
-    create: vi.fn(() => mockAxios),
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-    delete: vi.fn(),
-    defaults: { baseURL: '' },
-    interceptors: {
-      request: { use: vi.fn() },
-      response: { use: vi.fn() }
-    }
-  }
-  return {
-    default: mockAxios,
-    ...mockAxios
-  }
-})
-
 global.URL.createObjectURL = vi.fn(() => 'blob:mock')
 global.URL.revokeObjectURL = vi.fn()
 

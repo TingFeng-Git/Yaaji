@@ -18,9 +18,9 @@ vi.mock('../src/services/api', () => ({
     click: vi.fn(),
     delete: vi.fn(),
     batchDelete: vi.fn(),
-    importBookmarks: vi.fn(),
-    getImportProgress: vi.fn(),
-    exportBookmarks: vi.fn()
+    import: vi.fn(),
+    getProgress: vi.fn(),
+    export: vi.fn()
   },
   categoryApi: {
     getAll: vi.fn(),
@@ -249,6 +249,19 @@ describe('CategoryManager', () => {
       await wrapper.find('.confirm-btn.cancel').trigger('click')
       await nextTick()
       expect(wrapper.find('.confirm-dialog').exists()).toBe(false)
+    })
+
+    it('删除失败时应显示错误提示', async () => {
+      sharedState.categories = [...mockCategories]
+      categoryApi.delete.mockRejectedValue(new Error('网络错误'))
+      const wrapper = mountComponent()
+      await flushPromises()
+      await wrapper.find('.btn-delete').trigger('click')
+      await wrapper.find('.confirm-btn.confirm').trigger('click')
+      await flushPromises()
+      expect(wrapper.find('.toast').exists()).toBe(true)
+      expect(wrapper.find('.toast.error').exists()).toBe(true)
+      expect(wrapper.find('.toast-message').text()).toContain('网络错误')
     })
   })
 

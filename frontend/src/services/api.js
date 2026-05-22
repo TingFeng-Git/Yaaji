@@ -142,18 +142,10 @@ export const bookmarkApi = {
     }).then(handleResponse)
   },
 
-  importBookmarks(file) {
-    return this.import(file)
-  },
-
   getProgress(taskId) {
     return fetch(`${API_BASE}/api/bookmarks/import/progress?taskId=${taskId}`, {
       headers: getHeaders(true),
     }).then(handleResponse)
-  },
-
-  getImportProgress(taskId) {
-    return this.getProgress(taskId)
   },
 
   export(selectedIds = null) {
@@ -166,10 +158,6 @@ export const bookmarkApi = {
       if (!response.ok) throw new Error('导出失败')
       return response.blob()
     })
-  },
-
-  exportBookmarks(selectedIds = null) {
-    return this.export(selectedIds)
   },
 
   checkUrl(url) {

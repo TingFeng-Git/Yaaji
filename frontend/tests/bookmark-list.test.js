@@ -18,9 +18,9 @@ vi.mock('../src/services/api', () => ({
     click: vi.fn(),
     delete: vi.fn(),
     batchDelete: vi.fn(),
-    importBookmarks: vi.fn(),
-    getImportProgress: vi.fn(),
-    exportBookmarks: vi.fn()
+    import: vi.fn(),
+    getProgress: vi.fn(),
+    export: vi.fn()
   },
   categoryApi: {
     getAll: vi.fn(),
@@ -339,6 +339,13 @@ describe('BookmarkList', () => {
       await flushPromises()
       const timeElement = wrapper.find('.meta-time')
       expect(timeElement.text()).toContain('从未访问')
+    })
+  })
+
+  describe('导入导出功能', () => {
+    it('应该使用正确的导入方法名', () => {
+      expect(bookmarkApi.import).toBeDefined()
+      expect(typeof bookmarkApi.import).toBe('function')
     })
   })
 })

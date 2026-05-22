@@ -42,7 +42,6 @@ export default defineConfig(({ mode }) => {
           assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
           manualChunks: {
             'vue-vendor': ['vue', 'vue-router'],
-            'http-vendor': ['axios']
           }
         }
       }
