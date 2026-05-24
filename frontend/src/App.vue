@@ -1,5 +1,6 @@
 <template>
   <div class="app">
+    <SeasonEffect :season="currentTheme" />
     <header class="header">
       <div class="header-content">
         <div class="header-left">
@@ -72,6 +73,7 @@ import { categoryApi, authApi } from './services/api'
 import { sharedState } from './store/sharedState'
 import { authState } from './store/auth'
 import SearchSelect from './components/SearchSelect.vue'
+import SeasonEffect from './components/SeasonEffect.vue'
 import { logger } from './services/logger'
 
 const THEME_KEY = 'yaji_season'
@@ -96,7 +98,8 @@ const detectSeason = () => {
 export default {
   name: 'App',
   components: {
-    SearchSelect
+    SearchSelect,
+    SeasonEffect
   },
   setup() {
     const searchKeyword = ref('')
@@ -210,78 +213,82 @@ export default {
 
 [data-theme="spring"] {
   /* 颜色 */
-  --color-bg:           #F4FAF2;
+  --color-bg:           #e8f5e2;
+  --color-bg-end:       #f4eef8;
   --color-surface:      #FFFFFF;
   --color-ink:          #1A2A1A;
   --color-ink-secondary:#3C5A38;
   --color-ink-muted:    #7A9A74;
-  --color-border:       #C2DFB8;
-  --color-border-light: #D8EDD0;
-  --color-accent:       #3D8B37;
-  --color-accent-hover: #2E7229;
-  --color-accent-bg:    #EAF5E7;
+  --color-border:       #a8d498;
+  --color-border-light: #c8e8b8;
+  --color-accent:       #2a8024;
+  --color-accent-hover: #1f6418;
+  --color-accent-bg:    #DFF5D8;
   --color-success-text: #2A7A40;
   --color-success-bg:   #EAF5EE;
   --color-warning-text: #8B6914;
   --color-warning-bg:   #FDF8EC;
-  --color-tag-bg:       #D8EDD0;
+  --color-tag-bg:       #c8e8b8;
 }
 
 [data-theme="summer"] {
   /* 颜色 */
-  --color-bg:           #EFF7FC;
+  --color-bg:           #deeef8;
+  --color-bg-end:       #e8f4fc;
   --color-surface:      #FFFFFF;
   --color-ink:          #0F2535;
   --color-ink-secondary:#264A5E;
   --color-ink-muted:    #6090A8;
-  --color-border:       #AACFE0;
-  --color-border-light: #C8E3EE;
-  --color-accent:       #1277A8;
-  --color-accent-hover: #0E6090;
-  --color-accent-bg:    #DDF0FA;
+  --color-border:       #88c0d8;
+  --color-border-light: #a8d8ea;
+  --color-accent:       #0870a8;
+  --color-accent-hover: #065480;
+  --color-accent-bg:    #CCEBF7;
   --color-success-text: #1A7A50;
   --color-success-bg:   #E8F7F0;
   --color-warning-text: #8B6914;
   --color-warning-bg:   #FDF8EC;
-  --color-tag-bg:       #C8E3EE;
+  --color-tag-bg:       #a8d8ea;
 }
 
 [data-theme="autumn"] {
   /* 颜色 */
-  --color-bg:           #FCF7F0;
+  --color-bg:           #faeee0;
+  --color-bg-end:       #f8e8d8;
   --color-surface:      #FFFFFF;
   --color-ink:          #2A1A08;
   --color-ink-secondary:#4A3018;
   --color-ink-muted:    #9A7A5A;
-  --color-border:       #DEC09A;
-  --color-border-light: #EED4B4;
-  --color-accent:       #C05A18;
-  --color-accent-hover: #A04810;
-  --color-accent-bg:    #FDF0E0;
+  --color-border:       #d0a878;
+  --color-border-light: #e0c494;
+  --color-accent:       #c44810;
+  --color-accent-hover: #a63a0c;
+  --color-accent-bg:    #FBE4D6;
   --color-success-text: #2A7A40;
   --color-success-bg:   #EAF5EE;
   --color-warning-text: #8B6914;
   --color-warning-bg:   #FDF8EC;
-  --color-tag-bg:       #EED4B4;
+  --color-tag-bg:       #e0c494;
 }
 
 [data-theme="winter"] {
   /* 颜色 */
-  --color-bg:           #F4F7FC;
+  --color-bg:           #e8eff8;
+  --color-bg-end:       #e8f0fc;
   --color-surface:      #FFFFFF;
   --color-ink:          #12192A;
   --color-ink-secondary:#2E3E52;
   --color-ink-muted:    #7A8FA8;
-  --color-border:       #C0CEDC;
-  --color-border-light: #D8E2EE;
-  --color-accent:       #2D5FA0;
-  --color-accent-hover: #1E4A88;
-  --color-accent-bg:    #E4EDFC;
+  --color-border:       #a8bcd8;
+  --color-border-light: #c0d0e4;
+  --color-accent:       #1e52a0;
+  --color-accent-hover: #143d84;
+  --color-accent-bg:    #D4E7F9;
   --color-success-text: #1A6A4A;
   --color-success-bg:   #E8F5EE;
   --color-warning-text: #8B6914;
   --color-warning-bg:   #FDF8EC;
-  --color-tag-bg:       #D8E2EE;
+  --color-tag-bg:       #c0d0e4;
 }
 
 * {
@@ -294,7 +301,7 @@ body {
   font-family: var(--font-sans);
   line-height: 1.6;
   color: var(--color-ink);
-  background: var(--color-bg);
+  background: linear-gradient(160deg, var(--color-bg) 0%, var(--color-bg-end) 100%);
   min-height: 100vh;
 }
 
