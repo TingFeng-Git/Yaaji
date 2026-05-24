@@ -27,8 +27,8 @@
           <button @click="toggleTheme" class="theme-btn" :title="themeLabel">
             {{ themeEmoji }}
           </button>
-          <button @click="toggleAutoDetect" class="auto-btn" :title="autoDetect ? '自动跟随季节（点击关闭）' : '已锁定主题（点击开启自动）'">
-            {{ autoDetect ? '自动' : '手动' }}
+          <button @click="mobileMenuOpen = !mobileMenuOpen" class="menu-toggle" :title="mobileMenuOpen ? '关闭菜单' : '打开菜单'">
+            {{ mobileMenuOpen ? '✕' : '☰' }}
           </button>
           <router-link to="/categories" class="nav-link">分类管理</router-link>
           <router-link to="/" class="nav-link">书签列表</router-link>
@@ -37,6 +37,20 @@
           </span>
           <button v-if="isAuthenticated" @click="handleLogout" class="logout-btn">登出</button>
           <router-link v-else to="/login" class="nav-link">登录</router-link>
+        </div>
+      </div>
+      <div v-if="mobileMenuOpen" class="mobile-menu-overlay" @click="mobileMenuOpen = false">
+        <div class="mobile-menu" @click.stop>
+          <router-link to="/" class="mobile-nav-link" @click="mobileMenuOpen = false">📌 书签列表</router-link>
+          <router-link to="/categories" class="mobile-nav-link" @click="mobileMenuOpen = false">🏷️ 分类管理</router-link>
+          <div class="mobile-menu-divider"></div>
+          <button @click="toggleAutoDetect" class="mobile-menu-item auto-item">
+            <span>{{ autoDetect ? '🔄 自动跟随季节' : '🔒 手动锁定主题' }}</span>
+          </button>
+          <div v-if="isAuthenticated" class="mobile-menu-divider"></div>
+          <span v-if="isAuthenticated" class="mobile-user-info">👤 {{ user?.username }}</span>
+          <button v-if="isAuthenticated" @click="handleLogout" class="mobile-menu-item logout-item">登出</button>
+          <router-link v-else to="/login" class="mobile-nav-link" @click="mobileMenuOpen = false">登录</router-link>
         </div>
       </div>
     </header>
@@ -87,6 +101,7 @@ export default {
   setup() {
     const searchKeyword = ref('')
     const searchCategoryId = ref(null)
+    const mobileMenuOpen = ref(false)
     const isAuthenticated = computed(() => authState.isAuthenticated)
     const user = computed(() => authState.user)
 
@@ -158,6 +173,7 @@ export default {
     return {
       searchKeyword,
       searchCategoryId,
+      mobileMenuOpen,
       categories: computed(() => sharedState.categories),
       isAuthenticated,
       user,
@@ -432,6 +448,136 @@ body {
   background: var(--color-tag-bg);
 }
 
+.menu-toggle {
+  display: none;
+  padding: 0.4rem 0.6rem;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all var(--transition);
+  line-height: 1;
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+  font-weight: 600;
+}
+
+.menu-toggle:hover {
+  background: var(--color-tag-bg);
+}
+
+.mobile-menu-overlay {
+  position: fixed;
+  top: 100%;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 99;
+  animation: fadeIn 0.2s ease;
+}
+
+.mobile-menu {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border-light);
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-md);
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mobile-nav-link {
+  display: block;
+  padding: 0.875rem 1rem;
+  color: var(--color-ink-secondary);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  border-bottom: 1px solid var(--color-border-light);
+  transition: all var(--transition);
+  font-family: var(--font-sans);
+}
+
+.mobile-nav-link:hover {
+  background: var(--color-bg);
+  color: var(--color-accent);
+}
+
+.mobile-nav-link.router-link-active {
+  background: var(--color-accent-bg);
+  color: var(--color-accent);
+}
+
+.mobile-menu-item {
+  display: block;
+  padding: 0.875rem 1rem;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--color-border-light);
+  color: var(--color-ink-secondary);
+  text-align: left;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition);
+  font-family: var(--font-sans);
+}
+
+.mobile-menu-item:hover {
+  background: var(--color-bg);
+  color: var(--color-accent);
+}
+
+.mobile-menu-item.auto-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mobile-menu-item.logout-item {
+  color: var(--color-accent);
+}
+
+.mobile-menu-item.logout-item:hover {
+  background: var(--color-accent-bg);
+}
+
+.mobile-menu-divider {
+  height: 1px;
+  background: var(--color-border-light);
+  margin: 0.25rem 0;
+}
+
+.mobile-user-info {
+  display: block;
+  padding: 0.75rem 1rem;
+  color: var(--color-ink-muted);
+  font-size: 13px;
+  font-family: var(--font-sans);
+  border-bottom: 1px solid var(--color-border-light);
+}
+
 .auto-btn {
   padding: 0.3rem 0.55rem;
   background: transparent;
@@ -493,6 +639,7 @@ body {
 
   .header-right {
     order: 2;
+    gap: 0.5rem;
   }
 
   .header-center {
@@ -510,8 +657,23 @@ body {
   }
 
   .nav-link {
-    font-size: 13px;
-    padding: 0.4rem 0.6rem;
+    display: none;
+  }
+
+  .user-info {
+    display: none;
+  }
+
+  .logout-btn {
+    display: none;
+  }
+
+  .auto-btn {
+    display: none;
+  }
+
+  .menu-toggle {
+    display: block;
   }
 
   .main {

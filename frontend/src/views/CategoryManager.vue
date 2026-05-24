@@ -389,9 +389,9 @@ export default {
 
 <style scoped>
 .category-manager {
-  background-color: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
   padding: 1.5rem;
   animation: fadeInUp 0.3s ease;
 }
@@ -424,42 +424,46 @@ export default {
 .section-title {
   font-size: 18px;
   font-weight: 600;
-  color: #333;
+  color: var(--color-ink);
   margin: 0;
 }
 
 .btn-add-category {
   padding: 0.6rem 1rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--color-accent);
   color: #fff;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition);
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-add-category:hover {
+  background: var(--color-accent-hover);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: var(--shadow-md);
 }
 
 .btn-delete-empty {
   padding: 0.6rem 1rem;
-  background: linear-gradient(135deg, #f5576c 0%, #e74c3c 100%);
+  background: #e74c3c;
   color: #fff;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition);
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-delete-empty:hover {
+  background: #c0392b;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+  box-shadow: var(--shadow-md);
 }
 
 .toolbar {
@@ -474,25 +478,25 @@ export default {
   align-items: center;
   gap: 0.75rem;
   padding: 0.6rem 1rem;
-  background-color: #fff3e0;
-  border-radius: 8px;
+  background-color: var(--color-warning-bg);
+  border-radius: var(--radius-md);
   font-size: 14px;
-  color: #e65100;
+  color: var(--color-warning-text);
 }
 
 .search-info {
-  background-color: #f0f5ff;
-  color: #667eea;
+  background-color: var(--color-accent-bg);
+  color: var(--color-accent);
 }
 
 .clear-selection, .clear-search {
   padding: 0.25rem 0.6rem;
   background-color: #fff;
   border: 1px solid currentColor;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: 12px;
-  transition: all 0.2s;
+  transition: all var(--transition);
 }
 
 .clear-selection:hover, .clear-search:hover {
@@ -505,11 +509,11 @@ export default {
   background-color: #e74c3c;
   color: #fff;
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: 12px;
   font-weight: 500;
-  transition: all 0.2s;
+  transition: all var(--transition);
 }
 
 .btn-delete-batch:hover {
@@ -523,22 +527,24 @@ export default {
 .search-bar .search-input {
   width: 100%;
   padding: 0.75rem 1rem;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
   font-size: 14px;
-  transition: all 0.2s;
+  transition: all var(--transition);
+  background-color: var(--color-bg);
+  color: var(--color-ink);
 }
 
 .search-bar .search-input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(28,28,30,0.05);
 }
 
 .loading, .error, .empty {
   text-align: center;
   padding: 3rem;
-  color: #666;
+  color: var(--color-ink-muted);
   font-size: 15px;
 }
 
@@ -557,10 +563,10 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 1rem 1.25rem;
-  background-color: #f8f9fa;
+  background-color: var(--color-bg);
   border: 1px solid transparent;
-  border-radius: 8px;
-  transition: all 0.2s;
+  border-radius: var(--radius-md);
+  transition: all var(--transition);
   animation: cardFadeIn 0.4s ease forwards;
   opacity: 0;
 }
@@ -577,13 +583,13 @@ export default {
 }
 
 .category-item:hover {
-  background-color: #f0f2f5;
+  background-color: var(--color-border-light);
   transform: translateX(4px);
 }
 
 .category-item.selected {
-  background-color: rgba(102, 126, 234, 0.1);
-  border-color: #667eea;
+  background-color: var(--color-accent-bg);
+  border-color: var(--color-accent);
 }
 
 .category-info {
@@ -608,13 +614,13 @@ export default {
 .category-color {
   width: 16px;
   height: 16px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   flex-shrink: 0;
 }
 
 .category-name {
   font-weight: 500;
-  color: #333;
+  color: var(--color-ink);
   font-size: 14px;
   white-space: nowrap;
   overflow: hidden;
@@ -630,26 +636,27 @@ export default {
 .btn-action {
   padding: 0.35rem 0.75rem;
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: 12px;
   font-weight: 500;
-  transition: all 0.2s;
+  transition: all var(--transition);
+  min-height: 32px;
 }
 
 .btn-edit {
-  background-color: #fff;
-  color: #667eea;
-  border: 1px solid #667eea;
+  background-color: var(--color-surface);
+  color: var(--color-accent);
+  border: 1px solid var(--color-accent);
 }
 
 .btn-edit:hover {
-  background-color: #667eea;
+  background-color: var(--color-accent);
   color: #fff;
 }
 
 .btn-delete {
-  background-color: #fff;
+  background-color: var(--color-surface);
   color: #e74c3c;
   border: 1px solid #e74c3c;
 }
@@ -666,30 +673,30 @@ export default {
   gap: 0.5rem;
   margin-top: 1.5rem;
   padding-top: 1rem;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--color-border-light);
 }
 
 .page-btn {
   min-width: 36px;
   height: 36px;
   padding: 0 0.5rem;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
-  background: #fff;
-  color: #666;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-ink-secondary);
   font-size: 14px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition);
 }
 
 .page-btn:hover:not(:disabled) {
-  border-color: #667eea;
-  color: #667eea;
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .page-btn.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-color: #667eea;
+  background: var(--color-accent);
+  border-color: var(--color-accent);
   color: #fff;
 }
 
@@ -704,7 +711,7 @@ export default {
 }
 
 .page-btn.ellipsis:hover {
-  color: #666;
+  color: var(--color-ink-secondary);
 }
 
 .page-btn.prev,
@@ -733,12 +740,12 @@ export default {
 }
 
 .modal {
-  background-color: #fff;
-  border-radius: 12px;
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
   padding: 1.5rem;
   width: 90%;
   max-width: 400px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-lg);
   animation: scaleIn 0.2s ease;
 }
 
@@ -751,7 +758,7 @@ export default {
   margin: 0 0 1.5rem 0;
   font-size: 18px;
   font-weight: 600;
-  color: #333;
+  color: var(--color-ink);
 }
 
 .form {
@@ -768,22 +775,24 @@ export default {
 
 .form-group label {
   font-weight: 600;
-  color: #333;
+  color: var(--color-ink);
   font-size: 14px;
 }
 
 .form-group input {
   padding: 0.75rem 1rem;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
   font-size: 14px;
-  transition: all 0.2s;
+  transition: all var(--transition);
+  background-color: var(--color-bg);
+  color: var(--color-ink);
 }
 
 .form-group input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(28,28,30,0.05);
 }
 
 .color-picker {
@@ -795,10 +804,10 @@ export default {
 .color-option {
   width: 32px;
   height: 32px;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   border: 2px solid transparent;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition);
 }
 
 .color-option:hover {
@@ -806,8 +815,8 @@ export default {
 }
 
 .color-option.selected {
-  border-color: #333;
-  box-shadow: 0 0 0 2px #fff;
+  border-color: var(--color-ink);
+  box-shadow: 0 0 0 2px var(--color-surface);
 }
 
 .form-actions {
@@ -819,35 +828,37 @@ export default {
 
 .btn-cancel {
   padding: 0.6rem 1.25rem;
-  background-color: #f5f5f5;
-  color: #666;
-  border: 1px solid #ddd;
-  border-radius: 6px;
+  background-color: var(--color-bg);
+  color: var(--color-ink-secondary);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition);
 }
 
 .btn-cancel:hover {
-  background-color: #e8e8e8;
+  background-color: var(--color-border-light);
 }
 
 .btn-save {
   padding: 0.6rem 1.25rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--color-accent);
   color: #fff;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition);
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-save:hover {
+  background: var(--color-accent-hover);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: var(--shadow-md);
 }
 
 .confirm-overlay {
@@ -865,12 +876,12 @@ export default {
 }
 
 .confirm-dialog {
-  background-color: #fff;
-  border-radius: 12px;
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
   padding: 1.5rem;
   width: 90%;
   max-width: 360px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-lg);
   animation: scaleIn 0.2s ease;
 }
 
@@ -882,7 +893,7 @@ export default {
 
 .confirm-message {
   font-size: 15px;
-  color: #333;
+  color: var(--color-ink);
   text-align: center;
   margin-bottom: 1.5rem;
   line-height: 1.5;
@@ -896,33 +907,34 @@ export default {
 
 .confirm-btn {
   padding: 0.6rem 1.5rem;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition);
 }
 
 .confirm-btn.cancel {
-  background-color: #f5f5f5;
-  color: #666;
-  border: 1px solid #ddd;
+  background-color: var(--color-bg);
+  color: var(--color-ink-secondary);
+  border: 1px solid var(--color-border-light);
 }
 
 .confirm-btn.cancel:hover {
-  background-color: #e8e8e8;
+  background-color: var(--color-border-light);
 }
 
 .confirm-btn.confirm {
-  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  background: #e74c3c;
   color: #fff;
   border: none;
-  box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
+  box-shadow: var(--shadow-sm);
 }
 
 .confirm-btn.confirm:hover {
+  background: #c0392b;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4);
+  box-shadow: var(--shadow-md);
 }
 
 .toast {
@@ -933,9 +945,9 @@ export default {
   align-items: center;
   gap: 0.75rem;
   padding: 1rem 1.5rem;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  background-color: var(--color-surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
   z-index: 9999;
   animation: slideIn 0.3s ease;
   max-width: 400px;
@@ -976,7 +988,7 @@ export default {
 .toast-message {
   flex: 1;
   font-size: 14px;
-  color: #333;
+  color: var(--color-ink);
 }
 
 @media (max-width: 768px) {
@@ -987,6 +999,10 @@ export default {
 
   .category-item {
     padding: 0.875rem 1rem;
+  }
+
+  .btn-action {
+    min-height: 40px;
   }
 
   .toast {

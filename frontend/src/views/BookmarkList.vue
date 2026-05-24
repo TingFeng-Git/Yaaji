@@ -1159,6 +1159,11 @@ export default {
     flex-wrap: wrap;
   }
 
+  .btn-add, .btn-import, .btn-export, .btn-delete-batch {
+    flex: 1;
+    min-height: 44px;
+  }
+
   .bookmark-cards {
     grid-template-columns: 1fr;
   }
@@ -1187,6 +1192,7 @@ export default {
 
   .btn-action {
     flex: 1;
+    min-height: 44px;
   }
 
   .toast {

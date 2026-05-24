@@ -504,26 +504,6 @@ export default {
   transform: none;
 }
 
-@media (max-width: 768px) {
-  .bookmark-form {
-    padding: 1rem;
-  }
-
-  .form-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-
-  .form-actions {
-    flex-direction: column;
-  }
-
-  .btn-cancel, .btn-save {
-    width: 100%;
-  }
-}
-
 .toast {
   position: fixed;
   bottom: 2rem;
@@ -532,12 +512,13 @@ export default {
   align-items: center;
   gap: 0.75rem;
   padding: 1rem 1.5rem;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  background-color: var(--color-surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
   z-index: 9999;
   animation: slideIn 0.3s ease;
   max-width: 400px;
+  font-family: var(--font-sans);
 }
 
 @keyframes slideIn {
@@ -552,7 +533,7 @@ export default {
 }
 
 .toast.success {
-  border-left: 4px solid #43e97b;
+  border-left: 4px solid var(--color-success-text);
 }
 
 .toast.error {
@@ -560,7 +541,7 @@ export default {
 }
 
 .toast.warning {
-  border-left: 4px solid #f5576c;
+  border-left: 4px solid var(--color-warning-text);
 }
 
 .toast-icon {
@@ -569,7 +550,7 @@ export default {
 }
 
 .toast.success .toast-icon {
-  color: #43e97b;
+  color: var(--color-success-text);
 }
 
 .toast.error .toast-icon {
@@ -577,18 +558,18 @@ export default {
 }
 
 .toast.warning .toast-icon {
-  color: #f5576c;
+  color: var(--color-warning-text);
 }
 
 .toast-message {
   flex: 1;
   font-size: 14px;
-  color: #333;
+  color: var(--color-ink);
 }
 
 @media (max-width: 768px) {
   .bookmark-form {
-    padding: 1.5rem;
+    padding: 1rem;
   }
 
   .form-header {
@@ -625,6 +606,7 @@ export default {
     width: 100%;
     text-align: center;
     padding: 0.875rem 1rem;
+    min-height: 44px;
   }
 
   .toast {
