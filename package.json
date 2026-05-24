@@ -19,7 +19,7 @@
     "build:frontend": "npm run build --workspace=frontend",
     "build:extension": "npm run build --workspace=chrome-extension",
     "deploy": "npm run deploy --workspace=bookmarks-workers",
-    "deploy:frontend": "npx wrangler pages deploy ./frontend/dist --project-name bookmarks-frontend",
+    "deploy:frontend": "cd frontend && npx wrangler pages deploy dist --project-name bookmarks-frontend --functions functions",
     "db:setup": "bash bookmarks-workers/setup.sh",
     "db:reset": "bash bookmarks-workers/setup.sh yaji-bookmarks-reset",
     "db:migrate": "npm run db:migrate --workspace=bookmarks-workers",

@@ -1,0 +1,6 @@
+name = "bookmarks-frontend"
+compatibility_date = "2026-05-18"
+
+# Pages Functions configuration
+[vars]
+WORKERS_API_URL = "https://yaaji-bookmarks.1650937065.workers.dev"
