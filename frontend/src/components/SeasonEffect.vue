@@ -23,7 +23,9 @@ export default {
   },
   computed: {
     particleCount() {
-      return this.season === 'summer' ? 4 : 12
+      if (this.season === 'summer') return 4
+      if (this.season === 'winter') return 20
+      return 12
     }
   },
   methods: {
@@ -174,15 +176,15 @@ export default {
 
 /* Winter - Snowflakes (白色雪花) */
 .season-effect--winter .particle {
-  width: 16px;
-  height: 16px;
-  background: rgba(255, 255, 255, 0.65);
+  width: 24px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.8);
   border-radius: 0;
   top: -20px;
   clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
   box-shadow:
-    0 0 4px rgba(255, 255, 255, 0.5),
-    0 0 8px rgba(200, 220, 255, 0.3);
+    0 0 6px rgba(255, 255, 255, 0.7),
+    0 0 12px rgba(200, 220, 255, 0.5);
   animation: snow-fall 18s ease-in infinite;
 }
 
