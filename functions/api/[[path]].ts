@@ -9,7 +9,7 @@ export async function onRequest(context) {
   const headers = new Headers()
   for (const [key, value] of request.headers.entries()) {
     // Skip hop-by-hop headers that shouldn't be forwarded
-    if (!['connection', 'keep-alive', 'transfer-encoding', 'te', 'trailer'].includes(key.toLowerCase())) {
+    if (!['host', 'connection', 'keep-alive', 'transfer-encoding', 'te', 'trailer'].includes(key.toLowerCase())) {
       headers.set(key, value)
     }
   }
