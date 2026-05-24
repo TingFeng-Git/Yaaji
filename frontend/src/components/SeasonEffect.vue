@@ -24,7 +24,7 @@ export default {
   computed: {
     particleCount() {
       if (this.season === 'summer') return 4
-      if (this.season === 'winter') return 20
+      if (this.season === 'winter') return 12
       return 12
     }
   },
@@ -178,15 +178,15 @@ export default {
 .season-effect--winter .particle {
   width: 24px;
   height: 24px;
-  background: linear-gradient(135deg, rgba(180, 220, 255, 0.9), rgba(150, 200, 255, 0.85));
+  background: linear-gradient(135deg, rgba(220, 235, 255, 0.6), rgba(200, 225, 255, 0.55));
   border-radius: 0;
   top: -20px;
   clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
   box-shadow:
-    0 0 8px rgba(150, 200, 255, 0.8),
-    0 0 16px rgba(100, 180, 255, 0.6),
-    inset -1px -1px 3px rgba(255, 255, 255, 0.4);
-  animation: snow-fall 18s ease-in infinite;
+    0 0 6px rgba(200, 220, 255, 0.5),
+    0 0 12px rgba(180, 210, 255, 0.3),
+    inset -1px -1px 2px rgba(255, 255, 255, 0.3);
+  animation: snow-fall 24s ease-in infinite;
 }
 
 @keyframes snow-fall {
