@@ -174,17 +174,18 @@ export default {
   }
 }
 
-/* Winter - Snowflakes (白色雪花) */
+/* Winter - Snowflakes (冰蓝雪花) */
 .season-effect--winter .particle {
   width: 24px;
   height: 24px;
-  background: rgba(255, 255, 255, 0.8);
+  background: linear-gradient(135deg, rgba(180, 220, 255, 0.9), rgba(150, 200, 255, 0.85));
   border-radius: 0;
   top: -20px;
   clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
   box-shadow:
-    0 0 6px rgba(255, 255, 255, 0.7),
-    0 0 12px rgba(200, 220, 255, 0.5);
+    0 0 8px rgba(150, 200, 255, 0.8),
+    0 0 16px rgba(100, 180, 255, 0.6),
+    inset -1px -1px 3px rgba(255, 255, 255, 0.4);
   animation: snow-fall 18s ease-in infinite;
 }
 
