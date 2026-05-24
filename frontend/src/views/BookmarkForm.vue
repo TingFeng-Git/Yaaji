@@ -523,7 +523,6 @@ export default {
     width: 100%;
   }
 }
-</style>
 
 .toast {
   position: fixed;
