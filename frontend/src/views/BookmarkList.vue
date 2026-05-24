@@ -105,7 +105,7 @@
 
           <a :href="bookmark.url" target="_blank" class="card-url" @click="handleClick(bookmark.id)">
             <span class="url-icon">🔗</span>
-            {{ bookmark.url }}
+            <span class="url-text">{{ bookmark.url }}</span>
           </a>
 
           <p v-if="bookmark.description" class="card-desc">{{ bookmark.description }}</p>
@@ -899,6 +899,7 @@ export default {
   transition: all var(--transition);
   animation: cardFadeIn 0.4s ease forwards;
   opacity: 0;
+  min-width: 0;
 }
 
 @keyframes cardFadeIn {
@@ -971,11 +972,9 @@ export default {
   font-size: 12px;
   color: var(--color-ink-muted);
   text-decoration: none;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   font-family: var(--font-sans);
   transition: color var(--transition);
+  min-width: 0;
 }
 
 .card-url:hover {
@@ -986,6 +985,13 @@ export default {
 .url-icon {
   font-size: 10px;
   flex-shrink: 0;
+}
+
+.url-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .card-desc {
