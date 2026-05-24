@@ -24,6 +24,9 @@
           </div>
         </div>
         <div class="header-right">
+          <button @click="toggleTheme" class="theme-btn" :title="themeLabel">
+            {{ themeEmoji }}
+          </button>
           <router-link to="/categories" class="nav-link">分类管理</router-link>
           <router-link to="/" class="nav-link">书签列表</router-link>
           <span v-if="isAuthenticated" class="user-info">
@@ -54,6 +57,24 @@ import { authState } from './store/auth'
 import SearchSelect from './components/SearchSelect.vue'
 import { logger } from './services/logger'
 
+const THEME_KEY = 'yaji_season'
+
+const SEASONS = ['spring', 'summer', 'autumn', 'winter']
+const SEASON_LABELS = {
+  spring: '夏季',
+  summer: '秋季',
+  autumn: '冬季',
+  winter: '春季'
+}
+
+const detectSeason = () => {
+  const month = new Date().getMonth() + 1
+  if (month >= 3 && month <= 5) return 'spring'
+  if (month >= 6 && month <= 8) return 'summer'
+  if (month >= 9 && month <= 11) return 'autumn'
+  return 'winter'
+}
+
 export default {
   name: 'App',
   components: {
@@ -64,6 +85,30 @@ export default {
     const searchCategoryId = ref(null)
     const isAuthenticated = computed(() => authState.isAuthenticated)
     const user = computed(() => authState.user)
+
+    const currentTheme = ref(localStorage.getItem(THEME_KEY) || detectSeason())
+    const themeLabel = computed(() => `切换到${SEASON_LABELS[currentTheme.value]}`)
+    const themeEmoji = computed(() => {
+      const emojiMap = {
+        spring: '🌸',
+        summer: '☀️',
+        autumn: '🍂',
+        winter: '❄️'
+      }
+      return emojiMap[currentTheme.value]
+    })
+
+    const applyTheme = (theme) => {
+      document.documentElement.setAttribute('data-theme', theme)
+      localStorage.setItem(THEME_KEY, theme)
+      currentTheme.value = theme
+    }
+
+    const toggleTheme = () => {
+      const currentIndex = SEASONS.indexOf(currentTheme.value)
+      const nextIndex = (currentIndex + 1) % SEASONS.length
+      applyTheme(SEASONS[nextIndex])
+    }
 
     const fetchCategories = async () => {
       try {
@@ -82,6 +127,9 @@ export default {
     }
 
     onMounted(() => {
+      // 初始化主题
+      applyTheme(currentTheme.value)
+
       if (isAuthenticated.value) {
         fetchCategories()
       }
@@ -96,13 +144,111 @@ export default {
       categories: computed(() => sharedState.categories),
       isAuthenticated,
       user,
-      handleLogout
+      handleLogout,
+      currentTheme,
+      themeLabel,
+      themeEmoji,
+      toggleTheme
     }
   }
 }
 </script>
 
 <style>
+:root {
+  /* 圆角 */
+  --radius-sm: 3px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+
+  /* 阴影 */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+
+  --transition: 180ms ease;
+
+  /* 字体 */
+  --font-serif: 'Noto Serif SC', 'Source Han Serif CN', Georgia, serif;
+  --font-sans:  'Noto Sans SC',  'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+
+[data-theme="spring"] {
+  /* 颜色 */
+  --color-bg:           #F4FAF2;
+  --color-surface:      #FFFFFF;
+  --color-ink:          #1A2A1A;
+  --color-ink-secondary:#3C5A38;
+  --color-ink-muted:    #7A9A74;
+  --color-border:       #C2DFB8;
+  --color-border-light: #D8EDD0;
+  --color-accent:       #3D8B37;
+  --color-accent-hover: #2E7229;
+  --color-accent-bg:    #EAF5E7;
+  --color-success-text: #2A7A40;
+  --color-success-bg:   #EAF5EE;
+  --color-warning-text: #8B6914;
+  --color-warning-bg:   #FDF8EC;
+  --color-tag-bg:       #D8EDD0;
+}
+
+[data-theme="summer"] {
+  /* 颜色 */
+  --color-bg:           #EFF7FC;
+  --color-surface:      #FFFFFF;
+  --color-ink:          #0F2535;
+  --color-ink-secondary:#264A5E;
+  --color-ink-muted:    #6090A8;
+  --color-border:       #AACFE0;
+  --color-border-light: #C8E3EE;
+  --color-accent:       #1277A8;
+  --color-accent-hover: #0E6090;
+  --color-accent-bg:    #DDF0FA;
+  --color-success-text: #1A7A50;
+  --color-success-bg:   #E8F7F0;
+  --color-warning-text: #8B6914;
+  --color-warning-bg:   #FDF8EC;
+  --color-tag-bg:       #C8E3EE;
+}
+
+[data-theme="autumn"] {
+  /* 颜色 */
+  --color-bg:           #FCF7F0;
+  --color-surface:      #FFFFFF;
+  --color-ink:          #2A1A08;
+  --color-ink-secondary:#4A3018;
+  --color-ink-muted:    #9A7A5A;
+  --color-border:       #DEC09A;
+  --color-border-light: #EED4B4;
+  --color-accent:       #C05A18;
+  --color-accent-hover: #A04810;
+  --color-accent-bg:    #FDF0E0;
+  --color-success-text: #2A7A40;
+  --color-success-bg:   #EAF5EE;
+  --color-warning-text: #8B6914;
+  --color-warning-bg:   #FDF8EC;
+  --color-tag-bg:       #EED4B4;
+}
+
+[data-theme="winter"] {
+  /* 颜色 */
+  --color-bg:           #F4F7FC;
+  --color-surface:      #FFFFFF;
+  --color-ink:          #12192A;
+  --color-ink-secondary:#2E3E52;
+  --color-ink-muted:    #7A8FA8;
+  --color-border:       #C0CEDC;
+  --color-border-light: #D8E2EE;
+  --color-accent:       #2D5FA0;
+  --color-accent-hover: #1E4A88;
+  --color-accent-bg:    #E4EDFC;
+  --color-success-text: #1A6A4A;
+  --color-success-bg:   #E8F5EE;
+  --color-warning-text: #8B6914;
+  --color-warning-bg:   #FDF8EC;
+  --color-tag-bg:       #D8E2EE;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -110,10 +256,10 @@ export default {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+  font-family: var(--font-sans);
   line-height: 1.6;
-  color: #333;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: var(--color-ink);
+  background: var(--color-bg);
   min-height: 100vh;
 }
 
@@ -127,11 +273,8 @@ body {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .header-content {
@@ -158,10 +301,8 @@ body {
 .header h1 {
   font-size: 1.35rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-family: var(--font-serif);
+  color: var(--color-ink);
   letter-spacing: -0.5px;
 }
 
@@ -173,18 +314,18 @@ body {
 .search-box {
   display: flex;
   align-items: center;
-  background: #f5f5f5;
-  border-radius: 10px;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
   padding: 0.375rem 0.75rem;
   gap: 0.5rem;
-  border: 1px solid transparent;
-  transition: all 0.2s ease;
+  border: 1px solid var(--color-border-light);
+  transition: all var(--transition);
 }
 
 .search-box:focus-within {
-  background: #fff;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  background: var(--color-surface);
+  border-color: var(--color-border);
+  box-shadow: 0 0 0 3px rgba(28,28,30,0.05);
 }
 
 .search-icon {
@@ -198,63 +339,78 @@ body {
   background: transparent;
   font-size: 14px;
   outline: none;
-  color: #333;
+  color: var(--color-ink);
+  font-family: var(--font-sans);
 }
 
 .search-input::placeholder {
-  color: #999;
+  color: var(--color-ink-muted);
 }
 
 .header-right {
   display: flex;
   gap: 1rem;
   flex-shrink: 0;
+  align-items: center;
 }
 
 .nav-link {
-  color: #555;
+  color: var(--color-ink-secondary);
   text-decoration: none;
   font-size: 14px;
   font-weight: 500;
   padding: 0.5rem 0.75rem;
-  border-radius: 8px;
-  transition: all 0.2s ease;
+  border-radius: var(--radius-md);
+  transition: all var(--transition);
+  border-bottom: 2px solid transparent;
 }
 
 .nav-link:hover {
-  color: #667eea;
-  background: rgba(102, 126, 234, 0.1);
+  color: var(--color-accent);
 }
 
 .nav-link.router-link-active {
-  color: #667eea;
-  background: rgba(102, 126, 234, 0.1);
+  color: var(--color-accent);
+  border-bottom-color: var(--color-accent);
 }
 
 .user-info {
-  color: #667eea;
-  font-size: 14px;
-  font-weight: 600;
-  padding: 0.5rem 0.75rem;
-  border-radius: 8px;
-  background: rgba(102, 126, 234, 0.1);
-}
-
-.logout-btn {
-  color: #dc2626;
-  text-decoration: none;
+  color: var(--color-ink-secondary);
   font-size: 14px;
   font-weight: 500;
   padding: 0.5rem 0.75rem;
-  border-radius: 8px;
-  transition: all 0.2s ease;
+}
+
+.logout-btn {
+  color: var(--color-accent);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-md);
+  transition: all var(--transition);
   background: transparent;
-  border: none;
+  border: 1px solid var(--color-border);
   cursor: pointer;
+  font-family: var(--font-sans);
 }
 
 .logout-btn:hover {
-  background: rgba(220, 38, 38, 0.1);
+  background: var(--color-accent-bg);
+}
+
+.theme-btn {
+  padding: 0.4rem 0.6rem;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all var(--transition);
+  line-height: 1;
+}
+
+.theme-btn:hover {
+  background: var(--color-tag-bg);
 }
 
 .main {

@@ -143,7 +143,7 @@
 </template>
 
 <script>
-import { ref, computed, inject, onMounted, onActivated } from 'vue'
+import { ref, computed, inject, onMounted, onActivated, onUnmounted } from 'vue'
 import { bookmarkApi, categoryApi } from '../services/api'
 import { sharedState } from '../store/sharedState'
 import RecentBookmarks from '../components/RecentBookmarks.vue'
@@ -169,7 +169,27 @@ export default {
     const importStatusText = ref('等待上传...')
     const importedCount = ref(0)
     const currentPage = ref(1)
-    const pageSize = ref(10)
+
+    const calculatePageSize = () => {
+      const vh = window.innerHeight
+      const headerEl = document.querySelector('.header')
+      const headerH = headerEl ? headerEl.offsetHeight : 70
+      const overhead = 64 + 48 + 64 + 52 + 90
+      const cardH = 100
+      const count = Math.floor((vh - headerH - overhead) / cardH)
+      return Math.max(5, Math.min(30, count))
+    }
+
+    const pageSize = ref(calculatePageSize())
+
+    const handleResize = () => {
+      const newSize = calculatePageSize()
+      if (newSize !== pageSize.value) {
+        pageSize.value = newSize
+        currentPage.value = 1
+      }
+    }
+
     const needsAnimation = ref(true)
 
     const toast = ref({
@@ -493,11 +513,16 @@ export default {
         fetchCategories()
       }
       needsAnimation.value = true
+      window.addEventListener('resize', handleResize)
     })
 
     onActivated(() => {
       initialLoading.value = false
       needsAnimation.value = false
+    })
+
+    onUnmounted(() => {
+      window.removeEventListener('resize', handleResize)
     })
 
     return {
@@ -540,11 +565,13 @@ export default {
 
 <style scoped>
 .bookmark-list {
-  background-color: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border-light);
+  box-shadow: var(--shadow-sm);
   padding: 1.5rem;
   animation: fadeInUp 0.3s ease;
+  font-family: var(--font-sans);
 }
 
 .bookmark-list.no-animation {
@@ -574,64 +601,82 @@ export default {
 .section-title {
   font-size: 18px;
   font-weight: 600;
-  color: #333;
+  color: var(--color-ink);
   margin: 0;
+  font-family: var(--font-sans);
 }
 
 .btn-add {
   display: inline-block;
   padding: 0.6rem 1rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--color-ink);
   color: #fff;
   text-decoration: none;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   font-size: 13px;
   font-weight: 500;
-  transition: all 0.2s;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  transition: all var(--transition);
+  box-shadow: var(--shadow-sm);
+  font-family: var(--font-sans);
 }
 
 .btn-add:hover {
+  background: var(--color-ink-secondary);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: var(--shadow-md);
 }
 
 .header-buttons {
   display: flex;
   gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
-.btn-import, .btn-export {
+.btn-import, .btn-export, .btn-delete-batch {
   display: inline-block;
   padding: 0.6rem 1rem;
   color: #fff;
   text-decoration: none;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   font-size: 13px;
   font-weight: 500;
-  transition: all 0.2s;
+  transition: all var(--transition);
   border: none;
   cursor: pointer;
+  font-family: var(--font-sans);
 }
 
 .btn-import {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  box-shadow: 0 2px 8px rgba(245, 87, 108, 0.3);
+  background: #9B59B6;
+  box-shadow: var(--shadow-sm);
 }
 
-.btn-import:hover {
+.btn-import:hover:not(:disabled) {
+  background: #8E44AD;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
+  box-shadow: var(--shadow-md);
 }
 
 .btn-export {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  box-shadow: 0 2px 8px rgba(79, 172, 254, 0.3);
+  background: #3498DB;
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-export:hover {
+  background: #2980B9;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(79, 172, 254, 0.4);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-delete-batch {
+  background: var(--color-accent);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-delete-batch:hover {
+  background: var(--color-accent-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 .import-progress {
@@ -640,9 +685,9 @@ export default {
   gap: 0.75rem;
   padding: 1.25rem;
   margin-bottom: 1rem;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  border: 1px solid #e8e8e8;
+  background-color: var(--color-bg);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-light);
 }
 
 .progress-header {
@@ -654,14 +699,16 @@ export default {
 
 .progress-status {
   font-size: 14px;
-  color: #333;
+  color: var(--color-ink);
   font-weight: 500;
+  font-family: var(--font-sans);
 }
 
 .progress-percent {
   font-size: 16px;
-  color: #667eea;
+  color: var(--color-accent);
   font-weight: 700;
+  font-family: var(--font-sans);
 }
 
 .progress-stages {
@@ -678,7 +725,7 @@ export default {
 
 .stage-bar {
   height: 10px;
-  background-color: #e9ecef;
+  background-color: var(--color-border-light);
   border-radius: 5px;
   overflow: hidden;
 }
@@ -690,16 +737,16 @@ export default {
 }
 
 .stage.active .stage-fill {
-  background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+  background: var(--color-accent);
   animation: pulse 1.5s infinite;
 }
 
 .stage.completed .stage-fill {
-  background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
+  background: var(--color-success-text);
 }
 
 .stage:not(.active):not(.completed) .stage-fill {
-  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  background: var(--color-border);
 }
 
 @keyframes pulse {
@@ -709,17 +756,18 @@ export default {
 
 .stage-label {
   font-size: 12px;
-  color: #999;
+  color: var(--color-ink-muted);
   text-align: center;
+  font-family: var(--font-sans);
 }
 
 .stage.active .stage-label {
-  color: #4facfe;
+  color: var(--color-accent);
   font-weight: 500;
 }
 
 .stage.completed .stage-label {
-  color: #43e97b;
+  color: var(--color-success-text);
   font-weight: 500;
 }
 
@@ -727,28 +775,9 @@ export default {
   width: 100%;
   margin-top: 0.5rem;
   font-size: 13px;
-  color: #999;
+  color: var(--color-ink-muted);
   text-align: center;
-}
-
-.btn-delete-batch {
-  display: inline-block;
-  padding: 0.6rem 1rem;
-  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-  color: #fff;
-  text-decoration: none;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  transition: all 0.2s;
-  border: none;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
-}
-
-.btn-delete-batch:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4);
+  font-family: var(--font-sans);
 }
 
 .selection-info {
@@ -756,26 +785,28 @@ export default {
   align-items: center;
   gap: 1rem;
   padding: 0.75rem 1rem;
-  background-color: #fff3e0;
-  border-radius: 8px;
+  background-color: var(--color-warning-bg);
+  border-radius: var(--radius-md);
   margin-bottom: 1rem;
   font-size: 14px;
-  color: #e65100;
+  color: var(--color-warning-text);
+  font-family: var(--font-sans);
 }
 
 .clear-selection {
   padding: 0.3rem 0.75rem;
   background-color: #fff;
-  color: #e65100;
-  border: 1px solid #e65100;
-  border-radius: 4px;
+  color: var(--color-warning-text);
+  border: 1px solid var(--color-warning-text);
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: 12px;
-  transition: all 0.2s;
+  transition: all var(--transition);
+  font-family: var(--font-sans);
 }
 
 .clear-selection:hover {
-  background-color: #e65100;
+  background-color: var(--color-warning-text);
   color: #fff;
 }
 
@@ -784,38 +815,41 @@ export default {
   align-items: center;
   gap: 1rem;
   padding: 0.75rem 1rem;
-  background-color: #f0f5ff;
-  border-radius: 8px;
+  background-color: var(--color-accent-bg);
+  border-radius: var(--radius-md);
   margin-bottom: 1rem;
   font-size: 14px;
-  color: #667eea;
+  color: var(--color-accent);
+  font-family: var(--font-sans);
 }
 
 .clear-search {
   padding: 0.3rem 0.75rem;
   background-color: #fff;
-  color: #667eea;
-  border: 1px solid #667eea;
-  border-radius: 4px;
+  color: var(--color-accent);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: 12px;
-  transition: all 0.2s;
+  transition: all var(--transition);
+  font-family: var(--font-sans);
 }
 
 .clear-search:hover {
-  background-color: #667eea;
+  background-color: var(--color-accent);
   color: #fff;
 }
 
 .loading, .error, .empty {
   text-align: center;
   padding: 3rem;
-  color: #666;
+  color: var(--color-ink-muted);
   font-size: 15px;
+  font-family: var(--font-sans);
 }
 
 .error {
-  color: #e74c3c;
+  color: var(--color-error-text);
 }
 
 .select-all-bar {
@@ -823,9 +857,10 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 0.75rem 1rem;
-  background-color: #f8f9fa;
-  border-radius: 8px;
+  background-color: var(--color-bg);
+  border-radius: var(--radius-md);
   margin-bottom: 1rem;
+  font-family: var(--font-sans);
 }
 
 .select-all-label {
@@ -834,7 +869,7 @@ export default {
   gap: 0.5rem;
   cursor: pointer;
   font-size: 14px;
-  color: #666;
+  color: var(--color-ink-secondary);
 }
 
 .select-all-label input {
@@ -843,12 +878,13 @@ export default {
 
 .bookmark-count {
   font-size: 13px;
-  color: #999;
+  color: var(--color-ink-muted);
+  font-family: var(--font-sans);
 }
 
 .bookmark-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: 1fr;
   gap: 1rem;
 }
 
@@ -857,10 +893,10 @@ export default {
   align-items: flex-start;
   gap: 0.75rem;
   padding: 1rem;
-  background-color: #fff;
-  border: 1px solid #e8e8e8;
-  border-radius: 10px;
-  transition: all 0.2s ease;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  transition: all var(--transition);
   animation: cardFadeIn 0.4s ease forwards;
   opacity: 0;
 }
@@ -877,8 +913,8 @@ export default {
 }
 
 .bookmark-card:hover {
-  border-color: #667eea;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+  border-color: var(--color-border);
+  box-shadow: var(--shadow-md);
   transform: translateY(-2px);
 }
 
@@ -906,14 +942,15 @@ export default {
 .card-title {
   font-size: 15px;
   font-weight: 600;
-  color: #333;
+  color: var(--color-ink);
   text-decoration: none;
-  transition: color 0.2s;
+  transition: color var(--transition);
   word-break: break-word;
+  font-family: var(--font-sans);
 }
 
 .card-title:hover {
-  color: #667eea;
+  color: var(--color-accent);
 }
 
 .category-tag {
@@ -923,11 +960,13 @@ export default {
   font-size: 11px;
   font-weight: 500;
   white-space: nowrap;
+  background-color: var(--color-tag-bg);
+  font-family: var(--font-sans);
 }
 
 .category-tag.none {
-  background-color: #f0f0f0;
-  color: #999;
+  background-color: var(--color-tag-bg);
+  color: var(--color-ink-muted);
 }
 
 .card-url {
@@ -935,16 +974,17 @@ export default {
   align-items: center;
   gap: 0.25rem;
   font-size: 12px;
-  color: #667eea;
+  color: var(--color-accent);
   text-decoration: none;
   margin-bottom: 0.5rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-family: var(--font-sans);
 }
 
 .card-url:hover {
-  color: #764ba2;
+  color: var(--color-accent-hover);
   text-decoration: underline;
 }
 
@@ -963,7 +1003,8 @@ export default {
   align-items: center;
   gap: 0.25rem;
   font-size: 12px;
-  color: #999;
+  color: var(--color-ink-muted);
+  font-family: var(--font-sans);
 }
 
 .meta-icon {
@@ -972,10 +1013,11 @@ export default {
 
 .meta-desc {
   font-size: 12px;
-  color: #666;
+  color: var(--color-ink-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-family: var(--font-sans);
 }
 
 .card-actions {
@@ -991,13 +1033,15 @@ export default {
   justify-content: center;
   gap: 0.25rem;
   padding: 0.4rem 0.75rem;
-  border: none;
-  border-radius: 6px;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
   cursor: pointer;
   font-size: 12px;
   font-weight: 500;
-  transition: all 0.2s;
+  transition: all var(--transition);
   text-decoration: none;
+  background: var(--color-surface);
+  font-family: var(--font-sans);
 }
 
 .action-icon {
@@ -1005,23 +1049,23 @@ export default {
 }
 
 .btn-edit {
-  background-color: #f5f5f5;
-  color: #667eea;
+  color: var(--color-ink-secondary);
 }
 
 .btn-edit:hover {
-  background-color: #667eea;
-  color: #fff;
+  background-color: var(--color-bg);
+  color: var(--color-accent);
+  border-color: var(--color-accent);
 }
 
 .btn-delete {
-  background-color: #f5f5f5;
-  color: #e74c3c;
+  color: var(--color-accent);
 }
 
 .btn-delete:hover {
-  background-color: #e74c3c;
-  color: #fff;
+  background-color: var(--color-accent-bg);
+  color: var(--color-accent);
+  border-color: var(--color-accent);
 }
 
 .toast {
@@ -1032,12 +1076,14 @@ export default {
   align-items: center;
   gap: 0.75rem;
   padding: 1rem 1.5rem;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  background-color: var(--color-ink);
+  color: #fff;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
   z-index: 9999;
   animation: slideIn 0.3s ease;
   max-width: 400px;
+  font-family: var(--font-sans);
 }
 
 @keyframes slideIn {
@@ -1052,15 +1098,15 @@ export default {
 }
 
 .toast.success {
-  border-left: 4px solid #43e97b;
+  border-left: 4px solid var(--color-success-text);
 }
 
 .toast.error {
-  border-left: 4px solid #e74c3c;
+  border-left: 4px solid var(--color-error-text);
 }
 
 .toast.info {
-  border-left: 4px solid #4facfe;
+  border-left: 4px solid var(--color-accent);
 }
 
 .toast-icon {
@@ -1068,36 +1114,23 @@ export default {
   font-weight: bold;
 }
 
-.toast.success .toast-icon {
-  color: #43e97b;
-}
-
-.toast.error .toast-icon {
-  color: #e74c3c;
-}
-
-.toast.info .toast-icon {
-  color: #4facfe;
-}
-
 .toast-message {
   flex: 1;
   font-size: 14px;
-  color: #333;
 }
 
 .toast-close {
   background: none;
   border: none;
   font-size: 1.25rem;
-  color: #999;
+  color: rgba(255,255,255,0.7);
   cursor: pointer;
   padding: 0;
   line-height: 1;
 }
 
 .toast-close:hover {
-  color: #333;
+  color: #fff;
 }
 
 @media (max-width: 768px) {
@@ -1132,16 +1165,6 @@ export default {
 
   .btn-action {
     flex: 1;
-  }
-
-  .pagination-controls {
-    gap: 0.25rem;
-  }
-
-  .page-btn {
-    padding: 0.3rem 0.5rem;
-    font-size: 12px;
-    min-width: 32px;
   }
 
   .toast {
