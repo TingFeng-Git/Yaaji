@@ -244,11 +244,12 @@ export default {
   border: none;
   background: transparent;
   font-size: 13px;
-  color: #666;
+  color: var(--color-ink-secondary);
   cursor: pointer;
   outline: none;
-  border-left: 1px solid #ddd;
+  border-left: 1px solid var(--color-border-light);
   margin-left: 0.25rem;
+  font-family: var(--font-sans);
 }
 
 .select-trigger {
@@ -258,31 +259,33 @@ export default {
   gap: 0.5rem;
   padding: 0.375rem 0.5rem;
   cursor: pointer;
-  border-left: 1px solid #ddd;
+  border-left: 1px solid var(--color-border-light);
   margin-left: 0.25rem;
   user-select: none;
+  transition: all var(--transition);
 }
 
 .select-trigger:hover {
-  background-color: rgba(0, 0, 0, 0.03);
+  background-color: rgba(28,28,30,0.02);
 }
 
 .select-trigger.open {
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: rgba(28,28,30,0.04);
 }
 
 .select-value {
   font-size: 13px;
-  color: #666;
+  color: var(--color-ink-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-family: var(--font-sans);
 }
 
 .select-arrow {
   font-size: 8px;
-  color: #999;
-  transition: transform 0.2s;
+  color: var(--color-ink-muted);
+  transition: transform var(--transition);
   flex-shrink: 0;
 }
 
@@ -296,31 +299,39 @@ export default {
   left: 0;
   right: 0;
   margin-top: 0.25rem;
-  background: #fff;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
   z-index: 1000;
   overflow: hidden;
 }
 
 .search-input-wrapper {
   padding: 0.5rem;
-  border-bottom: 1px solid #e8e8e8;
+  border-bottom: 1px solid var(--color-border-light);
 }
 
 .search-input {
   width: 100%;
   padding: 0.5rem 0.75rem;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
   font-size: 13px;
   outline: none;
-  transition: border-color 0.2s;
+  transition: border-color var(--transition);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
 }
 
 .search-input:focus {
-  border-color: #667eea;
+  border-color: var(--color-border);
+  box-shadow: 0 0 0 2px rgba(28,28,30,0.05);
+}
+
+.search-input::placeholder {
+  color: var(--color-ink-muted);
 }
 
 .options-list {
@@ -331,19 +342,20 @@ export default {
 .option-item {
   padding: 0.625rem 0.75rem;
   font-size: 13px;
-  color: #333;
+  color: var(--color-ink);
   cursor: pointer;
-  transition: background-color 0.15s;
+  transition: background-color var(--transition);
+  font-family: var(--font-sans);
 }
 
 .option-item:hover,
 .option-item.highlighted {
-  background-color: #f5f5f5;
+  background-color: var(--color-bg);
 }
 
 .option-item.selected {
-  background-color: rgba(102, 126, 234, 0.1);
-  color: #667eea;
+  background-color: var(--color-accent-bg);
+  color: var(--color-accent);
   font-weight: 500;
 }
 
@@ -351,7 +363,8 @@ export default {
   padding: 1rem;
   text-align: center;
   font-size: 13px;
-  color: #999;
+  color: var(--color-ink-muted);
+  font-family: var(--font-sans);
 }
 
 @media (max-width: 768px) {

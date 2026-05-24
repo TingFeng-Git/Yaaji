@@ -29,7 +29,7 @@ export default {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(28, 28, 30, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -43,13 +43,14 @@ export default {
 }
 
 .confirm-dialog {
-  background-color: #fff;
-  border-radius: 12px;
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
   padding: 2rem;
   min-width: 320px;
   max-width: 420px;
   text-align: center;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-lg);
   animation: dialogIn 0.2s ease;
 }
 
@@ -71,9 +72,10 @@ export default {
 
 .confirm-message {
   font-size: 15px;
-  color: #333;
+  color: var(--color-ink);
   margin-bottom: 1.5rem;
   line-height: 1.5;
+  font-family: var(--font-sans);
 }
 
 .confirm-actions {
@@ -85,30 +87,33 @@ export default {
 .confirm-btn {
   padding: 0.6rem 1.5rem;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
-  transition: all 0.2s;
+  transition: all var(--transition);
+  font-family: var(--font-sans);
 }
 
 .confirm-btn.cancel {
-  background-color: #f5f5f5;
-  color: #666;
+  background-color: var(--color-tag-bg);
+  color: var(--color-ink-secondary);
+  border: 1px solid var(--color-border-light);
 }
 
 .confirm-btn.cancel:hover {
-  background-color: #e8e8e8;
+  background-color: var(--color-border-light);
 }
 
 .confirm-btn.confirm {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--color-accent);
   color: #fff;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  box-shadow: var(--shadow-sm);
 }
 
 .confirm-btn.confirm:hover {
+  background: var(--color-accent-hover);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: var(--shadow-md);
 }
 </style>

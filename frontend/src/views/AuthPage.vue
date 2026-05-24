@@ -114,14 +114,15 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--color-bg);
   padding: 1rem;
 }
 
 .auth-card {
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-md);
   width: 100%;
   max-width: 400px;
   padding: 2rem;
@@ -141,44 +142,45 @@ export default {
 .auth-header h1 {
   font-size: 1.75rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-family: var(--font-serif);
+  color: var(--color-ink);
   margin-bottom: 0.25rem;
 }
 
 .auth-subtitle {
-  color: #888;
+  color: var(--color-ink-muted);
   font-size: 0.875rem;
 }
 
 .auth-tabs {
   display: flex;
-  gap: 0.5rem;
+  gap: 0;
   margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--color-border-light);
 }
 
 .auth-tab {
   flex: 1;
-  padding: 0.625rem;
+  padding: 0.75rem;
   border: none;
-  background: #f0f0f0;
-  border-radius: 8px;
+  background: transparent;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #666;
+  color: var(--color-ink-muted);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  font-family: var(--font-sans);
 }
 
 .auth-tab:hover {
-  background: #e8e8e8;
+  color: var(--color-ink-secondary);
 }
 
 .auth-tab.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: #fff;
+  color: var(--color-accent);
+  border-bottom-color: var(--color-accent);
 }
 
 .auth-form {
@@ -196,28 +198,36 @@ export default {
 .form-group label {
   font-size: 0.875rem;
   font-weight: 500;
-  color: #555;
+  color: var(--color-ink-secondary);
+  font-family: var(--font-sans);
 }
 
 .form-group input {
   padding: 0.75rem 1rem;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
   font-size: 14px;
-  transition: all 0.2s ease;
+  transition: all var(--transition);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
 }
 
 .form-group input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+  border-color: var(--color-border);
+  box-shadow: 0 0 0 3px rgba(28,28,30,0.05);
+}
+
+.form-group input::placeholder {
+  color: var(--color-ink-muted);
 }
 
 .error-message {
-  background: #fef2f2;
-  color: #dc2626;
+  background: var(--color-error-bg);
+  color: var(--color-error-text);
   padding: 0.75rem;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   font-size: 0.875rem;
   text-align: center;
 }
@@ -226,18 +236,20 @@ export default {
   margin-top: 0.5rem;
   padding: 0.875rem;
   border: none;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: var(--radius-md);
+  background: var(--color-accent);
   color: #fff;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition);
+  font-family: var(--font-sans);
 }
 
 .submit-btn:hover:not(:disabled) {
+  background: var(--color-accent-hover);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: var(--shadow-md);
 }
 
 .submit-btn:disabled {
@@ -247,10 +259,10 @@ export default {
 
 .success-message {
   margin-top: 1rem;
-  background: #f0fdf4;
-  color: #16a34a;
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
   padding: 0.75rem;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   font-size: 0.875rem;
   text-align: center;
 }

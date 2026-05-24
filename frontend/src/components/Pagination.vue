@@ -74,13 +74,14 @@ export default {
   gap: 0.75rem;
   margin-top: 1.5rem;
   padding-top: 1rem;
-  border-top: 1px solid #e8e8e8;
+  border-top: 1px solid var(--color-border-light);
 }
 
 .pagination-info {
   text-align: center;
   font-size: 14px;
-  color: #666;
+  color: var(--color-ink-muted);
+  font-family: var(--font-sans);
 }
 
 .pagination-controls {
@@ -98,19 +99,20 @@ export default {
 
 .page-btn {
   padding: 0.4rem 0.75rem;
-  border: 1px solid #e0e0e0;
-  background-color: #fff;
-  color: #666;
-  border-radius: 4px;
+  border: 1px solid var(--color-border-light);
+  background-color: var(--color-surface);
+  color: var(--color-ink-secondary);
+  border-radius: var(--radius-md);
   cursor: pointer;
   font-size: 13px;
-  transition: all 0.2s;
+  transition: all var(--transition);
   min-width: 36px;
+  font-family: var(--font-sans);
 }
 
 .page-btn:hover:not(:disabled) {
-  border-color: #667eea;
-  color: #667eea;
+  border-color: var(--color-border);
+  color: var(--color-accent);
 }
 
 .page-btn:disabled {
@@ -119,8 +121,8 @@ export default {
 }
 
 .page-btn.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-color: #667eea;
+  background: var(--color-ink);
+  border-color: var(--color-ink);
   color: #fff;
 }
 </style>

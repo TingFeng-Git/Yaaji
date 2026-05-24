@@ -1,8 +1,7 @@
 <template>
-  <div class="recent-bookmarks">
+  <div v-if="recentBookmarks.length > 0 || loading || error" class="recent-bookmarks">
     <div v-if="loading" class="loading">加载最近访问...</div>
     <div v-else-if="error" class="error-recent">加载失败: {{ error }}</div>
-    <div v-else-if="recentBookmarks.length === 0" class="empty-recent">暂无最近访问</div>
     <div v-else>
       <div class="recent-header">
         <h3 class="recent-title">
@@ -121,9 +120,10 @@ export default {
 
 <style scoped>
 .recent-bookmarks {
-  background-color: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border-light);
+  box-shadow: var(--shadow-sm);
   padding: 1.5rem;
   margin-bottom: 1.5rem;
   animation: fadeInUp 0.3s ease;
@@ -145,6 +145,8 @@ export default {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--color-border-light);
 }
 
 .recent-title {
@@ -153,8 +155,9 @@ export default {
   gap: 0.5rem;
   font-size: 16px;
   font-weight: 600;
-  color: #333;
+  color: var(--color-ink);
   margin: 0;
+  font-family: var(--font-sans);
 }
 
 .recent-icon {
@@ -163,10 +166,11 @@ export default {
 
 .recent-count {
   font-size: 13px;
-  color: #999;
-  background-color: #f5f5f5;
+  color: var(--color-ink-muted);
+  background-color: var(--color-tag-bg);
   padding: 0.25rem 0.75rem;
   border-radius: 12px;
+  font-family: var(--font-sans);
 }
 
 .recent-list {
@@ -181,17 +185,17 @@ export default {
   justify-content: space-between;
   gap: 1rem;
   padding: 0.875rem 1rem;
-  background-color: #f8f9fa;
-  border-radius: 8px;
+  background-color: var(--color-bg);
+  border-radius: var(--radius-md);
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition: all var(--transition);
   border: 1px solid transparent;
+  font-family: var(--font-sans);
 }
 
 .recent-item:hover {
-  background-color: #f0f5ff;
-  border-color: rgba(102, 126, 234, 0.2);
-  transform: translateX(4px);
+  background-color: var(--color-border-light);
+  border-color: var(--color-border);
 }
 
 .recent-item-content {
@@ -205,18 +209,20 @@ export default {
 .recent-item-title {
   font-size: 14px;
   font-weight: 500;
-  color: #333;
+  color: var(--color-ink);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-family: var(--font-sans);
 }
 
 .recent-item-url {
   font-size: 12px;
-  color: #667eea;
+  color: var(--color-accent);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-family: var(--font-sans);
 }
 
 .recent-item-meta {
@@ -233,23 +239,27 @@ export default {
   font-size: 11px;
   font-weight: 500;
   white-space: nowrap;
+  background-color: var(--color-tag-bg);
+  font-family: var(--font-sans);
 }
 
 .recent-time {
   font-size: 12px;
-  color: #999;
+  color: var(--color-ink-muted);
   white-space: nowrap;
+  font-family: var(--font-sans);
 }
 
 .loading, .error-recent, .empty-recent {
   text-align: center;
   padding: 2rem;
-  color: #666;
+  color: var(--color-ink-muted);
   font-size: 14px;
+  font-family: var(--font-sans);
 }
 
 .error-recent {
-  color: #e74c3c;
+  color: var(--color-error-text);
 }
 
 @media (max-width: 768px) {

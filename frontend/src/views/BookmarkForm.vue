@@ -276,11 +276,13 @@ export default {
 
 <style scoped>
 .bookmark-form {
-  background-color: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border-light);
+  box-shadow: var(--shadow-sm);
   padding: 2rem;
   animation: fadeInUp 0.3s ease;
+  font-family: var(--font-sans);
 }
 
 @keyframes fadeInUp {
@@ -300,37 +302,40 @@ export default {
   align-items: center;
   margin-bottom: 2rem;
   padding-bottom: 1rem;
-  border-bottom: 2px solid #e8e8e8;
+  border-bottom: 1px solid var(--color-border-light);
 }
 
 .form-header h2 {
   margin: 0;
-  color: #333;
+  color: var(--color-ink);
   font-size: 20px;
   font-weight: 600;
+  font-family: var(--font-serif);
 }
 
 .btn-back {
-  color: #667eea;
+  color: var(--color-accent);
   text-decoration: none;
   font-size: 14px;
   font-weight: 500;
-  transition: color 0.2s;
+  transition: color var(--transition);
+  font-family: var(--font-sans);
 }
 
 .btn-back:hover {
-  color: #764ba2;
+  color: var(--color-accent-hover);
 }
 
 .loading, .error {
   text-align: center;
   padding: 3rem;
-  color: #666;
+  color: var(--color-ink-muted);
   font-size: 15px;
+  font-family: var(--font-sans);
 }
 
 .error {
-  color: #e74c3c;
+  color: var(--color-error-text);
 }
 
 .form {
@@ -347,12 +352,13 @@ export default {
 
 .form-group label {
   font-weight: 600;
-  color: #333;
+  color: var(--color-ink);
   font-size: 14px;
+  font-family: var(--font-sans);
 }
 
 .required {
-  color: #e74c3c;
+  color: var(--color-error-text);
 }
 
 .url-input-wrapper {
@@ -366,20 +372,21 @@ export default {
 
 .btn-fetch {
   padding: 0.75rem 1rem;
-  background-color: #f5f5f5;
-  color: #667eea;
-  border: 1px solid #667eea;
-  border-radius: 8px;
+  background-color: var(--color-surface);
+  color: var(--color-ink-secondary);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition);
   white-space: nowrap;
+  font-family: var(--font-sans);
 }
 
 .btn-fetch:hover:not(:disabled) {
-  background-color: #667eea;
-  color: #fff;
+  background-color: var(--color-bg);
+  border-color: var(--color-border);
 }
 
 .btn-fetch:disabled {
@@ -389,15 +396,16 @@ export default {
 
 .hint {
   font-size: 12px;
-  color: #999;
+  color: var(--color-ink-muted);
+  font-family: var(--font-sans);
 }
 
 .hint.success {
-  color: #43e97b;
+  color: var(--color-success-text);
 }
 
 .hint.warning {
-  color: #f5576c;
+  color: var(--color-accent);
   font-weight: 500;
 }
 
@@ -405,25 +413,27 @@ export default {
 .form-group textarea,
 .form-group select {
   padding: 0.875rem 1rem;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
   font-size: 15px;
-  transition: all 0.2s ease;
-  background-color: #fafafa;
+  transition: all var(--transition);
+  background-color: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
 }
 
 .form-group input:focus,
 .form-group textarea:focus,
 .form-group select:focus {
   outline: none;
-  border-color: #667eea;
-  background-color: #fff;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: var(--color-border);
+  background-color: var(--color-surface);
+  box-shadow: 0 0 0 3px rgba(28,28,30,0.05);
 }
 
 .form-group input::placeholder,
 .form-group textarea::placeholder {
-  color: #aaa;
+  color: var(--color-ink-muted);
 }
 
 .form-group textarea {
@@ -434,7 +444,7 @@ export default {
 .form-group select {
   cursor: pointer;
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239A9A9E' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 1rem center;
   padding-right: 2.5rem;
@@ -446,43 +456,46 @@ export default {
   gap: 1rem;
   margin-top: 1rem;
   padding-top: 1.5rem;
-  border-top: 1px solid #e8e8e8;
+  border-top: 1px solid var(--color-border-light);
 }
 
 .btn-cancel {
   padding: 0.875rem 1.5rem;
-  background-color: #fff;
-  color: #666;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  background-color: var(--color-surface);
+  color: var(--color-ink-secondary);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
   text-decoration: none;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition);
+  font-family: var(--font-sans);
 }
 
 .btn-cancel:hover {
-  background-color: #f5f5f5;
-  border-color: #ccc;
+  background-color: var(--color-bg);
+  border-color: var(--color-border);
 }
 
 .btn-save {
   padding: 0.875rem 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--color-ink);
   color: #fff;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  transition: all var(--transition);
+  box-shadow: var(--shadow-sm);
+  font-family: var(--font-sans);
 }
 
 .btn-save:hover:not(:disabled) {
+  background: var(--color-ink-secondary);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: var(--shadow-md);
 }
 
 .btn-save:disabled {
@@ -490,6 +503,27 @@ export default {
   cursor: not-allowed;
   transform: none;
 }
+
+@media (max-width: 768px) {
+  .bookmark-form {
+    padding: 1rem;
+  }
+
+  .form-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .btn-cancel, .btn-save {
+    width: 100%;
+  }
+}
+</style>
 
 .toast {
   position: fixed;
