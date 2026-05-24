@@ -27,6 +27,9 @@
           <button @click="toggleTheme" class="theme-btn" :title="themeLabel">
             {{ themeEmoji }}
           </button>
+          <button @click="toggleAutoDetect" class="auto-btn" :title="autoDetect ? '自动跟随季节（点击关闭）' : '已锁定主题（点击开启自动）'">
+            {{ autoDetect ? '自动' : '手动' }}
+          </button>
           <router-link to="/categories" class="nav-link">分类管理</router-link>
           <router-link to="/" class="nav-link">书签列表</router-link>
           <span v-if="isAuthenticated" class="user-info">
@@ -58,6 +61,7 @@ import SearchSelect from './components/SearchSelect.vue'
 import { logger } from './services/logger'
 
 const THEME_KEY = 'yaji_season'
+const AUTO_KEY = 'yaji_season_auto'
 
 const SEASONS = ['spring', 'summer', 'autumn', 'winter']
 const SEASON_LABELS = {
@@ -86,7 +90,10 @@ export default {
     const isAuthenticated = computed(() => authState.isAuthenticated)
     const user = computed(() => authState.user)
 
-    const currentTheme = ref(localStorage.getItem(THEME_KEY) || detectSeason())
+    const autoDetect = ref(localStorage.getItem(AUTO_KEY) !== 'false')
+    const currentTheme = ref(
+      autoDetect.value ? detectSeason() : (localStorage.getItem(THEME_KEY) || detectSeason())
+    )
     const themeLabel = computed(() => `切换到${SEASON_LABELS[currentTheme.value]}`)
     const themeEmoji = computed(() => {
       const emojiMap = {
@@ -100,7 +107,9 @@ export default {
 
     const applyTheme = (theme) => {
       document.documentElement.setAttribute('data-theme', theme)
-      localStorage.setItem(THEME_KEY, theme)
+      if (!autoDetect.value) {
+        localStorage.setItem(THEME_KEY, theme)
+      }
       currentTheme.value = theme
     }
 
@@ -108,6 +117,14 @@ export default {
       const currentIndex = SEASONS.indexOf(currentTheme.value)
       const nextIndex = (currentIndex + 1) % SEASONS.length
       applyTheme(SEASONS[nextIndex])
+    }
+
+    const toggleAutoDetect = () => {
+      autoDetect.value = !autoDetect.value
+      localStorage.setItem(AUTO_KEY, String(autoDetect.value))
+      if (autoDetect.value) {
+        applyTheme(detectSeason())
+      }
     }
 
     const fetchCategories = async () => {
@@ -148,7 +165,9 @@ export default {
       currentTheme,
       themeLabel,
       themeEmoji,
-      toggleTheme
+      toggleTheme,
+      autoDetect,
+      toggleAutoDetect
     }
   }
 }
@@ -411,6 +430,25 @@ body {
 
 .theme-btn:hover {
   background: var(--color-tag-bg);
+}
+
+.auto-btn {
+  padding: 0.3rem 0.55rem;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-ink-muted);
+  transition: all var(--transition);
+  font-family: var(--font-sans);
+  letter-spacing: 0.3px;
+}
+
+.auto-btn:hover {
+  background: var(--color-tag-bg);
+  color: var(--color-ink-secondary);
 }
 
 .main {
