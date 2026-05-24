@@ -476,7 +476,7 @@ body {
 
 .mobile-menu-overlay {
   position: fixed;
-  top: 100%;
+  top: 0;
   left: 0;
   right: 0;
   bottom: 0;
@@ -486,8 +486,8 @@ body {
 }
 
 .mobile-menu {
-  position: absolute;
-  top: 0;
+  position: fixed;
+  top: 60px;
   left: 0;
   right: 0;
   background: var(--color-surface);
@@ -496,6 +496,7 @@ body {
   flex-direction: column;
   box-shadow: var(--shadow-md);
   animation: slideDown 0.2s ease;
+  z-index: 100;
 }
 
 @keyframes fadeIn {
