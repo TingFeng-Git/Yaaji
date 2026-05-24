@@ -44,6 +44,16 @@ export default {
         }
       }
       // Spring, Autumn, Winter: falling from top
+      if (this.season === 'winter') {
+        // Winter snowflakes: randomized delays for scattered effect
+        const randomDelay = Math.random() * 4
+        const duration = 16 + Math.random() * 8
+        return {
+          left: `${Math.random() * 100}%`,
+          animationDelay: `${randomDelay}s`,
+          animationDuration: `${duration}s`
+        }
+      }
       const baseDelay = (index / this.particleCount) * 2
       return {
         left: `${(index / this.particleCount) * 100 + (Math.random() - 0.5) * 20}%`,
@@ -164,14 +174,15 @@ export default {
 
 /* Winter - Snowflakes (白色雪花) */
 .season-effect--winter .particle {
-  width: 13px;
-  height: 13px;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  background: rgba(255, 255, 255, 0.65);
+  border-radius: 0;
   top: -20px;
+  clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
   box-shadow:
-    0 0 6px rgba(255, 255, 255, 0.8),
-    0 0 12px rgba(200, 220, 255, 0.4);
+    0 0 4px rgba(255, 255, 255, 0.5),
+    0 0 8px rgba(200, 220, 255, 0.3);
   animation: snow-fall 18s ease-in infinite;
 }
 
