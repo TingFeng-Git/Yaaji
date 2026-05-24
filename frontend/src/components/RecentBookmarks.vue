@@ -271,6 +271,12 @@ export default {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
+    overflow: hidden;
+  }
+
+  .recent-item-content {
+    width: 100%;
+    min-width: 0;
   }
 
   .recent-item-meta {

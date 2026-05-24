@@ -143,7 +143,7 @@
 </template>
 
 <script>
-import { ref, computed, inject, onMounted, onActivated, onUnmounted } from 'vue'
+import { ref, computed, inject, onMounted, onActivated } from 'vue'
 import { bookmarkApi, categoryApi } from '../services/api'
 import { sharedState } from '../store/sharedState'
 import RecentBookmarks from '../components/RecentBookmarks.vue'
@@ -170,25 +170,7 @@ export default {
     const importedCount = ref(0)
     const currentPage = ref(1)
 
-    const calculatePageSize = () => {
-      const vh = window.innerHeight
-      const headerEl = document.querySelector('.header')
-      const headerH = headerEl ? headerEl.offsetHeight : 70
-      const overhead = 64 + 48 + 64 + 52 + 90
-      const cardH = 100
-      const count = Math.floor((vh - headerH - overhead) / cardH)
-      return Math.max(5, Math.min(30, count))
-    }
-
-    const pageSize = ref(calculatePageSize())
-
-    const handleResize = () => {
-      const newSize = calculatePageSize()
-      if (newSize !== pageSize.value) {
-        pageSize.value = newSize
-        currentPage.value = 1
-      }
-    }
+    const pageSize = ref(9)
 
     const needsAnimation = ref(true)
 
@@ -513,16 +495,11 @@ export default {
         fetchCategories()
       }
       needsAnimation.value = true
-      window.addEventListener('resize', handleResize)
     })
 
     onActivated(() => {
       initialLoading.value = false
       needsAnimation.value = false
-    })
-
-    onUnmounted(() => {
-      window.removeEventListener('resize', handleResize)
     })
 
     return {
