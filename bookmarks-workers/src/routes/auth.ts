@@ -72,8 +72,10 @@ authRoutes.post('/register', async (c) => {
 
   const userId = result.meta.last_row_id as number
 
-  // 生成 JWT
-  const token = await sign({ userId, username }, JWT_SECRET)
+  // 生成 JWT（15天有效期）
+  const nowInSeconds = Math.floor(Date.now() / 1000)
+  const exp = nowInSeconds + 15 * 24 * 60 * 60
+  const token = await sign({ userId, username, exp }, JWT_SECRET)
 
   return c.json({
     message: '注册成功',
@@ -102,7 +104,10 @@ authRoutes.post('/login', async (c) => {
     return c.json({ error: '用户名或密码错误' }, 401)
   }
 
-  const token = await sign({ userId: user.id, username: user.username }, JWT_SECRET)
+  // 生成 JWT（15天有效期）
+  const nowInSeconds = Math.floor(Date.now() / 1000)
+  const exp = nowInSeconds + 15 * 24 * 60 * 60
+  const token = await sign({ userId: user.id, username: user.username, exp }, JWT_SECRET)
 
   return c.json({
     message: '登录成功',
