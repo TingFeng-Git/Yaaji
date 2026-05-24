@@ -79,52 +79,52 @@
       </div>
 
       <div class="bookmark-cards">
-        <div 
-          v-for="(bookmark, index) in paginatedBookmarks" 
-          :key="bookmark.id" 
+        <div
+          v-for="(bookmark, index) in paginatedBookmarks"
+          :key="bookmark.id"
           class="bookmark-card"
           :style="{ animationDelay: index * 0.05 + 's' }"
         >
-          <div class="card-checkbox">
+          <div class="card-top">
             <input
               type="checkbox"
               :value="bookmark.id"
               v-model="selectedBookmarks"
             />
+            <span v-if="getCategoryById(bookmark.categoryId)"
+                  class="category-tag"
+                  :style="{ backgroundColor: getCategoryById(bookmark.categoryId).color + '20', color: getCategoryById(bookmark.categoryId).color }">
+              {{ getCategoryById(bookmark.categoryId).name }}
+            </span>
+            <span v-else class="category-tag none">未分类</span>
           </div>
-          <div class="card-content">
-            <div class="card-header">
-              <a :href="bookmark.url" target="_blank" class="card-title" @click="handleClick(bookmark.id)">
-                {{ bookmark.title }}
-              </a>
-              <span v-if="getCategoryById(bookmark.categoryId)" 
-                    class="category-tag" 
-                    :style="{ backgroundColor: getCategoryById(bookmark.categoryId).color + '20', color: getCategoryById(bookmark.categoryId).color }">
-                {{ getCategoryById(bookmark.categoryId).name }}
-              </span>
-              <span v-else class="category-tag none">未分类</span>
+
+          <a :href="bookmark.url" target="_blank" class="card-title-link" @click="handleClick(bookmark.id)">
+            {{ bookmark.title }}
+          </a>
+
+          <a :href="bookmark.url" target="_blank" class="card-url" @click="handleClick(bookmark.id)">
+            <span class="url-icon">🔗</span>
+            {{ bookmark.url }}
+          </a>
+
+          <p v-if="bookmark.description" class="card-desc">{{ bookmark.description }}</p>
+
+          <div class="card-footer">
+            <span class="meta-time">
+              <span class="meta-icon">🕐</span>
+              {{ formatLastClicked(bookmark.lastClickedAt) }}
+            </span>
+            <div class="card-actions">
+              <router-link :to="`/edit/${bookmark.id}`" class="btn-action btn-edit">
+                <span class="action-icon">✏️</span>
+                编辑
+              </router-link>
+              <button @click="deleteBookmark(bookmark.id)" class="btn-action btn-delete">
+                <span class="action-icon">🗑️</span>
+                删除
+              </button>
             </div>
-            <a :href="bookmark.url" target="_blank" class="card-url" @click="handleClick(bookmark.id)">
-              <span class="url-icon">🔗</span>
-              {{ bookmark.url }}
-            </a>
-            <div class="card-meta">
-              <span class="meta-time">
-                <span class="meta-icon">🕐</span>
-                {{ formatLastClicked(bookmark.lastClickedAt) }}
-              </span>
-              <span v-if="bookmark.description" class="meta-desc">{{ bookmark.description }}</span>
-            </div>
-          </div>
-          <div class="card-actions">
-            <router-link :to="`/edit/${bookmark.id}`" class="btn-action btn-edit">
-              <span class="action-icon">✏️</span>
-              编辑
-            </router-link>
-            <button @click="deleteBookmark(bookmark.id)" class="btn-action btn-delete">
-              <span class="action-icon">🗑️</span>
-              删除
-            </button>
           </div>
         </div>
       </div>
@@ -884,18 +884,18 @@ export default {
 
 .bookmark-cards {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1rem;
 }
 
 .bookmark-card {
   display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  padding: 1rem;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1.25rem;
   background-color: var(--color-surface);
   border: 1px solid var(--color-border-light);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   transition: all var(--transition);
   animation: cardFadeIn 0.4s ease forwards;
   opacity: 0;
@@ -918,38 +918,32 @@ export default {
   transform: translateY(-2px);
 }
 
-.card-checkbox {
-  padding-top: 0.25rem;
+.card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
 }
 
-.card-checkbox input {
+.card-top input {
   cursor: pointer;
 }
 
-.card-content {
-  flex: 1;
-  min-width: 0;
-}
-
-.card-header {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.card-title {
+.card-title-link {
   font-size: 15px;
   font-weight: 600;
   color: var(--color-ink);
   text-decoration: none;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
   transition: color var(--transition);
-  word-break: break-word;
   font-family: var(--font-sans);
 }
 
-.card-title:hover {
+.card-title-link:hover {
   color: var(--color-accent);
 }
 
@@ -962,6 +956,7 @@ export default {
   white-space: nowrap;
   background-color: var(--color-tag-bg);
   font-family: var(--font-sans);
+  flex-shrink: 0;
 }
 
 .category-tag.none {
@@ -972,30 +967,47 @@ export default {
 .card-url {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.3rem;
   font-size: 12px;
-  color: var(--color-accent);
+  color: var(--color-ink-muted);
   text-decoration: none;
-  margin-bottom: 0.5rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   font-family: var(--font-sans);
+  transition: color var(--transition);
 }
 
 .card-url:hover {
-  color: var(--color-accent-hover);
+  color: var(--color-accent);
   text-decoration: underline;
 }
 
 .url-icon {
   font-size: 10px;
+  flex-shrink: 0;
 }
 
-.card-meta {
+.card-desc {
+  font-size: 13px;
+  color: var(--color-ink-secondary);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0;
+  font-family: var(--font-sans);
+}
+
+.card-footer {
   display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-border-light);
+  gap: 0.5rem;
 }
 
 .meta-time {
@@ -1005,24 +1017,16 @@ export default {
   font-size: 12px;
   color: var(--color-ink-muted);
   font-family: var(--font-sans);
+  flex-shrink: 0;
 }
 
 .meta-icon {
   font-size: 10px;
 }
 
-.meta-desc {
-  font-size: 12px;
-  color: var(--color-ink-secondary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-family: var(--font-sans);
-}
-
 .card-actions {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 0.5rem;
   flex-shrink: 0;
 }
@@ -1154,13 +1158,25 @@ export default {
   }
 
   .bookmark-card {
-    padding: 0.875rem;
+    padding: 1rem;
+  }
+
+  .card-top {
+    flex-wrap: wrap;
+  }
+
+  .card-title-link {
+    font-size: 14px;
+  }
+
+  .card-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
   }
 
   .card-actions {
-    flex-direction: row;
     width: 100%;
-    margin-top: 0.75rem;
   }
 
   .btn-action {
