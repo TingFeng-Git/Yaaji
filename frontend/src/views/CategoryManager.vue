@@ -999,10 +999,35 @@ export default {
 
   .category-item {
     padding: 0.875rem 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
   }
 
   .btn-action {
     min-height: 40px;
+  }
+
+  .category-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .form-actions {
+    gap: 0.5rem;
+  }
+
+  .btn-cancel,
+  .btn-save {
+    flex: 1;
+    min-height: 44px;
+    padding: 0.75rem 1rem;
+    text-align: center;
+    justify-content: center;
+  }
+
+  .color-option {
+    width: 36px;
+    height: 36px;
   }
 
   .toast {
